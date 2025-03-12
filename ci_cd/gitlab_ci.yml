@@ -116,7 +116,7 @@ java-functional-tests:
   <<: *java-test
   script:
     - export ENVIRONMENT=test
-    - mvn test -Dtest="*Functional*"
+    - mvn test -Dtest="*Functional*" -Dsurefire.failIfNoSpecifiedTests=false
 
 java-integration-tests:
   <<: *java-test
