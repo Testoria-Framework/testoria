@@ -65,8 +65,8 @@ jobs:
       - name: Execute Tests
         run: |
           chmod +x scripts/run_tests.sh
-          ./scripts/run_tests.sh --language java --type functional --env ci
-
+          ./scripts/run_tests.sh --language java --type functional --env test
+    
       # Upload test reports
       - uses: actions/upload-artifact@v4
         with:
