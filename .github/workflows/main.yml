@@ -47,7 +47,7 @@ jobs:
         if: matrix.language == 'javascript'
         run: |
           npm install
-          npm install jest supertest axios chai allure-jest
+          npm install jest supertest axios chai allure-jest zaproxy
 
       # Java setup
       - uses: actions/setup-java@v4
