@@ -58,8 +58,8 @@ Depending on which language you want to use, you'll need:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/api-testing-framework.git
-cd api-testing-framework
+git clone https://github.com/Testoria-Framework/testoria.git
+cd testoria
 ```
 
 2. Install dependencies for your preferred language:
