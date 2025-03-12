@@ -48,18 +48,30 @@ show_help() {
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
+    case $1 in
         -l|--language)
             LANGUAGE="$2"
             shift 2
+            ;;
+        --language=*)
+            LANGUAGE="${1#*=}"
+            shift
             ;;
         -t|--type)
             TEST_TYPE="$2"
             shift 2
             ;;
+        --type=*)
+            TEST_TYPE="${1#*=}"
+            shift
+            ;;
         -e|--env)
             ENV="$2"
             shift 2
+            ;;
+        --env=*)
+            ENV="${1#*=}"
+            shift
             ;;
         -r|--report)
             REPORT=true
