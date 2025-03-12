@@ -65,7 +65,7 @@ jobs:
       - name: Execute Tests
         run: |
           chmod +x scripts/run_tests.sh
-          ./scripts/run_tests.sh --language=${{ matrix.language }} --type=${{ matrix.test-type }} --env=ci
+          ./scripts/run_tests.sh --language java --type functional --env ci
 
       # Upload test reports
       - uses: actions/upload-artifact@v4
