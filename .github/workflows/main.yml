@@ -1,100 +1,94 @@
-name: API Testing Framework CI
+name: Full API Test Suite
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
-  test:
+  run-api-tests:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         language: [python, javascript, java]
         test-type: [functional, integration, security]
         include:
           - language: python
-            python-version: 3.9
+            python-version: '3.12'
           - language: javascript
-            node-version: 16.x
+            node-version: '20'
           - language: java
-            java-version: 11
+            java-version: '17'
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    # Python Setup
-    - name: Set up Python ${{ matrix.python-version }}
-      if: matrix.language == 'python'
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Install Python dependencies
-      if: matrix.language == 'python'
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
+      # Python setup
+      - uses: actions/setup-python@v4
+        if: matrix.language == 'python'
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    # JavaScript Setup
-    - name: Set up Node.js ${{ matrix.node-version }}
-      if: matrix.language == 'javascript'
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-    
-    - name: Install JavaScript dependencies
-      if: matrix.language == 'javascript'
-      run: |
-        npm install
-        npm install jest supertest
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest pytest-cov allure-pytest requests assertpy
 
-    # Java Setup
-    - name: Set up Java ${{ matrix.java-version }}
-      if: matrix.language == 'java'
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'adopt'
-        java-version: ${{ matrix.java-version }}
-    
-    - name: Install Java dependencies
-      if: matrix.language == 'java'
-      run: |
-        mvn clean install
-        mvn dependency:resolve
+      # JavaScript setup
+      - uses: actions/setup-node@v4
+        if: matrix.language == 'javascript'
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    # Run Tests
-    - name: Run ${{ matrix.language }} ${{ matrix.test-type }} Tests
-      run: |
-        ./scripts/run_tests.sh \
-          --language ${{ matrix.language }} \
-          --type ${{ matrix.test-type }} \
-          --env ci
+      - name: Install JS Dependencies
+        if: matrix.language == 'javascript'
+        run: |
+          npm install
+          npm install jest supertest axios chai allure-jest
 
-    # Upload test reports
-    - name: Upload Allure Report
-      uses: actions/upload-artifact@v3
-      with:
-        name: allure-report-${{ matrix.language }}-${{ matrix.test-type }}
-        path: reports/allure-report
-        retention-days: 7
+      # Java setup
+      - uses: actions/setup-java@v4
+        if: matrix.language == 'java'
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
 
-  # Publish release on tag
+      - name: Install Java Dependencies
+        if: matrix.language == 'java'
+        run: |
+          mvn clean install
+
+      # Run tests
+      - name: Execute Tests
+        run: |
+          chmod +x scripts/run_tests.sh
+          ./scripts/run_tests.sh --language=${{ matrix.language }} --type=${{ matrix.test-type }} --env=ci
+
+      # Upload test reports
+      - uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ matrix.language }}-${{ matrix.test-type }}
+          path: reports/allure_results/${{ matrix.language }}/${{ matrix.test-type }}
+
+  # Create Release (optional)
   release:
-    needs: test
-    runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-    
+    runs-on: ubuntu-latest
+    needs: run-api-tests
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          ./reports/allure-report.zip
-          ./dist/*.tar.gz
-        body_path: CHANGELOG.md
+      - uses: actions/checkout@v4
+
+      - name: Create ZIP of Allure Reports
+        run: |
+          zip -r allure-report.zip reports/allure_results/
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            reports/allure-report.zip
+            dist/*.tar.gz
+          body_path: CHANGELOG.md
