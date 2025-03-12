@@ -1,0 +1,47 @@
+{
+  "base_url": "https://api-dev.example.com",
+  "timeout": 30000,
+  "retry_attempts": 3,
+  "retry_delay": 1000,
+  "auth": {
+    "type": "oauth2",
+    "client_id": "${DEV_CLIENT_ID}",
+    "client_secret": "${DEV_CLIENT_SECRET}",
+    "auth_url": "https://auth-dev.example.com/oauth/token"
+  },
+  "logging": {
+    "level": "debug",
+    "file": {
+      "enabled": true,
+      "path": "logs/api_tests_dev.log",
+      "max_size": "10MB",
+      "backup_count": 5
+    },
+    "console": {
+      "enabled": true,
+      "colored": true
+    }
+  },
+  "mocks": {
+    "enabled": true,
+    "wiremock": {
+      "port": 8080,
+      "root_dir": "mocks/wiremock_configs"
+    },
+    "mockserver": {
+      "port": 1080,
+      "root_dir": "mocks/mockserver_configs"
+    }
+  },
+  "test_data": {
+    "seed": 12345,
+    "user_count": 10,
+    "product_count": 20,
+    "order_count": 5
+  },
+  "feature_flags": {
+    "new_user_flow": true,
+    "enhanced_security": false,
+    "beta_features": true
+  }
+}

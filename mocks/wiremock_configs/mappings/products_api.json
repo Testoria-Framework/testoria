@@ -1,0 +1,280 @@
+[
+  {
+    "request": {
+      "method": "GET",
+      "url": "/products"
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": [
+        {
+          "id": "P001",
+          "name": "Smartphone X",
+          "description": "Latest smartphone with advanced features",
+          "price": 799.99,
+          "category": "electronics",
+          "stock": 100,
+          "sku": "ELEC-SP-001",
+          "created_at": "2023-01-05T08:30:00Z",
+          "updated_at": "2023-01-05T08:30:00Z"
+        },
+        {
+          "id": "P002",
+          "name": "Laptop Pro",
+          "description": "High-performance laptop for professionals",
+          "price": 1299.99,
+          "category": "electronics",
+          "stock": 50,
+          "sku": "ELEC-LP-002",
+          "created_at": "2023-01-06T09:45:00Z",
+          "updated_at": "2023-01-06T09:45:00Z"
+        },
+        {
+          "id": "P003",
+          "name": "Running Shoes",
+          "description": "Comfortable running shoes with cushioned soles",
+          "price": 89.99,
+          "category": "sportswear",
+          "stock": 200,
+          "sku": "SPORT-RS-003",
+          "created_at": "2023-01-07T10:15:00Z",
+          "updated_at": "2023-01-07T10:15:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "urlPathPattern": "/products",
+      "queryParameters": {
+        "category": {
+          "equalTo": "electronics"
+        }
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": [
+        {
+          "id": "P001",
+          "name": "Smartphone X",
+          "description": "Latest smartphone with advanced features",
+          "price": 799.99,
+          "category": "electronics",
+          "stock": 100,
+          "sku": "ELEC-SP-001",
+          "created_at": "2023-01-05T08:30:00Z",
+          "updated_at": "2023-01-05T08:30:00Z"
+        },
+        {
+          "id": "P002",
+          "name": "Laptop Pro",
+          "description": "High-performance laptop for professionals",
+          "price": 1299.99,
+          "category": "electronics",
+          "stock": 50,
+          "sku": "ELEC-LP-002",
+          "created_at": "2023-01-06T09:45:00Z",
+          "updated_at": "2023-01-06T09:45:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "urlPattern": "/products/P[0-9]+"
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": "{{request.pathSegments.[1]}}",
+        "name": "Smartphone X",
+        "description": "Latest smartphone with advanced features",
+        "price": 799.99,
+        "category": "electronics",
+        "stock": 100,
+        "sku": "ELEC-SP-001",
+        "created_at": "2023-01-05T08:30:00Z",
+        "updated_at": "2023-01-05T08:30:00Z"
+      },
+      "transformers": ["response-template"]
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/products",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.name"
+        },
+        {
+          "matchesJsonPath": "$.price"
+        },
+        {
+          "matchesJsonPath": "$.category"
+        }
+      ]
+    },
+    "response": {
+      "status": 201,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": "P{{randomValue length=3 type='NUMERIC'}}",
+        "name": "{{jsonPath request.body '$.name'}}",
+        "description": "{{jsonPath request.body '$.description'}}",
+        "price": "{{jsonPath request.body '$.price'}}",
+        "category": "{{jsonPath request.body '$.category'}}",
+        "stock": "{{jsonPath request.body '$.stock'}}",
+        "sku": "{{jsonPath request.body '$.sku'}}",
+        "created_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z",
+        "updated_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z"
+      },
+      "transformers": ["response-template"]
+    }
+  },
+  {
+    "request": {
+      "method": "PUT",
+      "urlPattern": "/products/P[0-9]+",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$"
+        }
+      ]
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": "{{request.pathSegments.[1]}}",
+        "name": "{{jsonPath request.body '$.name'}}",
+        "description": "{{jsonPath request.body '$.description'}}",
+        "price": "{{jsonPath request.body '$.price'}}",
+        "category": "{{jsonPath request.body '$.category'}}",
+        "stock": "{{jsonPath request.body '$.stock'}}",
+        "sku": "{{jsonPath request.body '$.sku'}}",
+        "created_at": "2023-01-05T08:30:00Z",
+        "updated_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z"
+      },
+      "transformers": ["response-template"]
+    }
+  },
+  {
+    "request": {
+      "method": "DELETE",
+      "urlPattern": "/products/P[0-9]+"
+    },
+    "response": {
+      "status": 204
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "url": "/products/P999"
+    },
+    "response": {
+      "status": 404,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "error": "Product not found"
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/products",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.name",
+          "equalTo": ""
+        }
+      ]
+    },
+    "response": {
+      "status": 400,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "errors": [
+          {
+            "field": "name",
+            "message": "Product name cannot be empty"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/products",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.price",
+          "lessThan": 0
+        }
+      ]
+    },
+    "response": {
+      "status": 400,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "errors": [
+          {
+            "field": "price",
+            "message": "Price must be greater than or equal to 0"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/products",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.category",
+          "equalTo": ""
+        }
+      ]
+    },
+    "response": {
+      "status": 400,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "errors": [
+          {
+            "field": "category",
+            "message": "Product category cannot be empty"
+          }
+        ]
+      }
+    }
+  }
+]

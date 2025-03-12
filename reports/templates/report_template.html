@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Report - {{report_title}}</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #3d5a80;
+            --background-color: #f8f9fa;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-color: #dee2e6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: var(--background-color);
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        header h1 {
+            color: white;
+            margin-bottom: 5px;
+        }
+        
+        .report-meta {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .meta-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .meta-label {
+            font-weight: bold;
+            width: 150px;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+        }
+        
+        .card-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .card-success .card-value { color: var(--success-color); }
+        .card-warning .card-value { color: var(--warning-color); }
+        .card-danger .card-value { color: var(--danger-color); }
+        .card-info .card-value { color: var(--info-color); }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--success-color);
+        }
+        
+        .test-summary {
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #f1f3f5;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .status-passed {
+            background-color: #e3fcef;
+            color: var(--success-color);
+            border: 1px solid #28a745;
+        }
+        
+        .status-failed {
+            background-color: #fbe9eb;
+            color: var(--danger-color);
+            border: 1px solid #dc3545;
+        }
+        
+        .status-skipped {
+            background-color: #fff8e1;
+            color: var(--warning-color);
+            border: 1px solid #ffc107;
+        }
+        
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chart-title {
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+        }
+        
+        canvas {
+            max-width: 100%;
+        }
+        
+        .accordion {
+            margin-bottom: 30px;
+        }
+        
+        .accordion-item {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .accordion-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+        
+        .accordion-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .accordion-content.active {
+            display: block;
+        }
+        
+        .details-table {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .details-table th {
+            font-weight: normal;
+            background-color: #f1f3f5;
+            color: #333;
+        }
+        
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 50px;
+        }
+        
+        .filter-controls {
+            margin-bottom: 20px;
+        }
+        
+        .filter-controls input, .filter-controls select {
+            padding: 8px 12px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .filter-controls button {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .filter-controls button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .summary-cards, .chart-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .meta-row {
+                flex-direction: column;
+            }
+            
+            .meta-label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+            }
+            
+            .card-value {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="data:image/svg+xml;base64,{{logo_base64}}" alt="API Testing Framework Logo">
+                <div>
+                    <h1>API Testing Framework</h1>
+                    <div>{{report_subtitle}}</div>
+                </div>
+            </div>
+            <div class="report-date">
+                Generated: {{generation_date}}
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="report-meta">
+            <div class="meta-row">
+                <div class="meta-label">Environment:</div>
+                <div class="meta-value">{{environment}}</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-label">Base URL:</div>
+                <div class="meta-value">{{base_url}}</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-label">Test Run ID:</div>
+                <div class="meta-value">{{test_run_id}}</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-label">Duration:</div>
+                <div class="meta-value">{{duration}}</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-label">Executed By:</div>
+                <div class="meta-value">{{executed_by}}</div>
+            </div>
+        </div>
+        
+        <h2>Summary</h2>
+        <div class="summary-cards">
+            <div class="card card-success">
+                <div class="card-title">
+                    <i data-feather="check-circle"></i>
+                    Passed Tests
+                </div>
+                <div class="card-value">{{passed_tests}}</div>
+                <div class="card-meta">Out of {{total_tests}} tests</div>
+            </div>
+            
+            <div class="card card-danger">
+                <div class="card-title">
+                    <i data-feather="x-circle"></i>
+                    Failed Tests
+                </div>
+                <div class="card-value">{{failed_tests}}</div>
+                <div class="card-meta">Out of {{total_tests}} tests</div>
+            </div>
+            
+            <div class="card card-warning">
+                <div class="card-title">
+                    <i data-feather="alert-circle"></i>
+                    Skipped Tests
+                </div>
+                <div class="card-value">{{skipped_tests}}</div>
+                <div class="card-meta">Out of {{total_tests}} tests</div>
+            </div>
+            
+            <div class="card card-info">
+                <div class="card-title">
+                    <i data-feather="pie-chart"></i>
+                    Pass Rate
+                </div>
+                <div class="card-value">{{pass_rate}}%</div>
+                <div class="progress-bar">
+                    <div class="progress" style="width: {{pass_rate}}%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-card">
+                <h3 class="chart-title">Test Results</h3>
+                <canvas id="resultsChart"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <h3 class="chart-title">Tests by Category</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+        
+        <h2>Test Results</h2>
+        <div class="filter-controls">
+            <input type="text" id="searchInput" placeholder="Search tests...">
+            <select id="statusFilter">
+                <option value="all">All Statuses</option>
+                <option value="passed">Passed</option>
+                <option value="failed">Failed</option>
+                <option value="skipped">Skipped</option>
+            </select>
+            <select id="categoryFilter">
+                <option value="all">All Categories</option>
+                {{#each categories}}
+                <option value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+            <button id="resetFilters">Reset Filters</button>
+        </div>
+        
+        <table id="testResultsTable">
+            <thead>
+                <tr>
+                    <th>Test Name</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each tests}}
+                <tr class="test-row" data-status="{{status}}" data-category="{{category}}">
+                    <td>{{name}}</td>
+                    <td>{{category}}</td>
+                    <td><span class="status status-{{status}}">{{status}}</span></td>
+                    <td>{{duration}}</td>
+                    <td><button class="details-btn" data-test-id="{{id}}">View Details</button></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        
+        <h2>Test Details</h2>
+        <div class="accordion">
+            {{#each tests}}
+            <div class="accordion-item" id="test-details-{{id}}">
+                <div class="accordion-header">
+                    {{name}}
+                    <span class="status status-{{status}}">{{status}}</span>
+                </div>
+                <div class="accordion-content">
+                    <div><strong>Description:</strong> {{description}}</div>
+                    <div><strong>Category:</strong> {{category}}</div>
+                    <div><strong>Duration:</strong> {{duration}}</div>
+                    <div><strong>Started:</strong> {{start_time}}</div>
+                    <div><strong>Finished:</strong> {{end_time}}</div>
+                    
+                    {{#if error_message}}
+                    <div class="error-message">
+                        <h4>Error:</h4>
+                        <pre>{{error_message}}</pre>
+                    </div>
+                    {{/if}}
+                    
+                    <h4>Steps:</h4>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each steps}}
+                            <tr>
+                                <td>{{name}}</td>
+                                <td><span class="status status-{{status}}">{{status}}</span></td>
+                                <td>{{duration}}</td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                    
+                    {{#if api_requests.length}}
+                    <h4>API Requests:</h4>
+                    <div class="api-requests">
+                        {{#each api_requests}}
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                {{method}} {{url}}
+                                <span class="status status-{{status}}">{{status_code}}</span>
+                            </div>
+                            <div class="accordion-content">
+                                <div><strong>Request Headers:</strong></div>
+                                <pre>{{request_headers}}</pre>
+                                
+                                {{#if request_body}}
+                                <div><strong>Request Body:</strong></div>
+                                <pre>{{request_body}}</pre>
+                                {{/if}}
+                                
+                                <div><strong>Response Status:</strong> {{status_code}} {{status_text}}</div>
+                                
+                                <div><strong>Response Headers:</strong></div>
+                                <pre>{{response_headers}}</pre>
+                                
+                                <div><strong>Response Body:</strong></div>
+                                <pre>{{response_body}}</pre>
+                                
+                                <div><strong>Response Time:</strong> {{response_time}} ms</div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 API Testing Framework | Generated with 🧪</p>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons"></script>
+    <script>
+        // Initialize Feather Icons
+        feather.replace();
+        
+        // Chart Data
+        const resultsData = {
+            labels: ['Passed', 'Failed', 'Skipped'],
+            datasets: [{
+                data: [{{passed_tests}}, {{failed_tests}}, {{skipped_tests}}],
+                backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                borderWidth: 0
+            }]
+        };
+        
+        const categoryData = {
+            labels: [{{category_labels}}],
+            datasets: [{
+                data: [{{category_counts}}],
+                backgroundColor: [{{category_colors}}],
+                borderWidth: 0
+            }]
+        };
+        
+        // Create Charts
+        const resultsChart = new Chart(document.getElementById('resultsChart'), {
+            type: 'doughnut',
+            data: resultsData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                label += ': ' + context.raw + ' tests';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        const categoryChart = new Chart(document.getElementById('categoryChart'), {
+            type: 'bar',
+            data: categoryData,
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Tests'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Accordion functionality
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        });
+        
+        // Details button functionality
+        document.querySelectorAll('.details-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const testId = button.getAttribute('data-test-id');
+                const detailsElement = document.getElementById(`test-details-${testId}`);
+                
+                // Close all other accordion items
+                document.querySelectorAll('.accordion-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Open this accordion item
+                detailsElement.querySelector('.accordion-content').classList.add('active');
+                
+                // Scroll to the element
+                detailsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+        
+        // Filter functionality
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const resetFilters = document.getElementById('resetFilters');
+        const testRows = document.querySelectorAll('.test-row');
+        
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value;
+            const categoryValue = categoryFilter.value;
+            
+            testRows.forEach(row => {
+                const testName = row.querySelector('td:first-child').textContent.toLowerCase();
+                const testStatus = row.getAttribute('data-status');
+                const testCategory = row.getAttribute('data-category');
+                
+                const matchesSearch = testName.includes(searchTerm);
+                const matchesStatus = statusValue === 'all' || testStatus === statusValue;
+                const matchesCategory = categoryValue === 'all' || testCategory === categoryValue;
+                
+                if (matchesSearch && matchesStatus && matchesCategory) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        searchInput.addEventListener('input', applyFilters);
+        statusFilter.addEventListener('change', applyFilters);
+        categoryFilter.addEventListener('change', applyFilters);
+        
+        resetFilters.addEventListener('click', () => {
+            searchInput.value = '';
+            statusFilter.value = 'all';
+            categoryFilter.value = 'all';
+            applyFilters();
+        });
+    </script>
+</body>
+</html>

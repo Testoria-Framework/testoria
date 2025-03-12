@@ -1,0 +1,251 @@
+pipeline {
+    agent none
+    
+    environment {
+        PYTHON_VERSION = '3.9'
+        NODE_VERSION = '16'
+        JAVA_VERSION = '11'
+        ALLURE_RESULTS_DIR = 'allure-results'
+    }
+    
+    triggers {
+        // Run every day at midnight
+        cron('0 0 * * *')
+        // Run on pull requests
+        pullRequest()
+    }
+    
+    options {
+        // Keep builds for 30 days
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+        // Timeout after 2 hours
+        timeout(time: 2, unit: 'HOURS')
+        // Add timestamps to console output
+        timestamps()
+    }
+    
+    stages {
+        stage('Lint') {
+            parallel {
+                stage('Python Lint') {
+                    agent {
+                        docker {
+                            image "python:${PYTHON_VERSION}-slim"
+                        }
+                    }
+                    steps {
+                        sh '''
+                            pip install flake8 pylint
+                            if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+                            flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+                            pylint --disable=all --enable=unused-import,unused-variable core/ tests/
+                        '''
+                    }
+                }
+                
+                stage('JavaScript Lint') {
+                    agent {
+                        docker {
+                            image "node:${NODE_VERSION}-slim"
+                        }
+                    }
+                    steps {
+                        sh '''
+                            npm ci
+                            npm run lint
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Test') {
+            parallel {
+                stage('Python Tests') {
+                    agent {
+                        docker {
+                            image "python:${PYTHON_VERSION}"
+                        }
+                    }
+                    environment {
+                        ENVIRONMENT = 'test'
+                        API_KEY = credentials('api-test-key')
+                    }
+                    steps {
+                        sh '''
+                            pip install pytest pytest-cov allure-pytest
+                            if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+                            
+                            # Run different test types
+                            mkdir -p reports/functional
+                            python -m pytest tests/functional_tests/python/ -v --alluredir=reports/functional
+                            
+                            mkdir -p reports/integration
+                            python -m pytest tests/integration_tests/python/ -v --alluredir=reports/integration
+                            
+                            mkdir -p reports/security
+                            python -m pytest tests/security_tests/python/ -v --alluredir=reports/security
+                        '''
+                        
+                        // Archive test results
+                        stash includes: 'reports/**/*', name: 'python-test-results'
+                    }
+                    post {
+                        always {
+                            sh 'mkdir -p ${ALLURE_RESULTS_DIR}/python'
+                            sh 'cp -r reports/*/* ${ALLURE_RESULTS_DIR}/python/ || true'
+                        }
+                    }
+                }
+                
+                stage('JavaScript Tests') {
+                    agent {
+                        docker {
+                            image "node:${NODE_VERSION}"
+                        }
+                    }
+                    environment {
+                        ENVIRONMENT = 'test'
+                        API_KEY = credentials('api-test-key')
+                    }
+                    steps {
+                        sh '''
+                            npm ci
+                            
+                            # Run different test types
+                            npm run test:functional
+                            npm run test:integration
+                            npm run test:security
+                        '''
+                        
+                        // Archive test results
+                        stash includes: 'reports/allure-results/**/*', name: 'js-test-results'
+                    }
+                    post {
+                        always {
+                            sh 'mkdir -p ${ALLURE_RESULTS_DIR}/javascript'
+                            sh 'cp -r reports/allure-results/* ${ALLURE_RESULTS_DIR}/javascript/ || true'
+                        }
+                    }
+                }
+                
+                stage('Java Tests') {
+                    agent {
+                        docker {
+                            image "maven:3.8.6-openjdk-${JAVA_VERSION}"
+                        }
+                    }
+                    environment {
+                        ENVIRONMENT = 'test'
+                        API_KEY = credentials('api-test-key')
+                        MAVEN_OPTS = '-Dmaven.repo.local=.m2/repository'
+                    }
+                    steps {
+                        sh '''
+                            # Run different test types
+                            mvn test -Dtest="*Functional*"
+                            mvn test -Dtest="*Integration*"
+                            mvn test -Dtest="*Security*"
+                        '''
+                        
+                        // Archive test results
+                        stash includes: 'target/allure-results/**/*', name: 'java-test-results'
+                    }
+                    post {
+                        always {
+                            sh 'mkdir -p ${ALLURE_RESULTS_DIR}/java'
+                            sh 'cp -r target/allure-results/* ${ALLURE_RESULTS_DIR}/java/ || true'
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Performance Tests') {
+            agent {
+                docker {
+                    image "openjdk:${JAVA_VERSION}-slim"
+                }
+            }
+            environment {
+                ENVIRONMENT = 'test'
+            }
+            steps {
+                sh '''
+                    apt-get update && apt-get install -y wget
+                    wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.5.tgz
+                    tar -xzf apache-jmeter-5.5.tgz
+                    
+                    mkdir -p reports/performance
+                    ./apache-jmeter-5.5/bin/jmeter -n -t tests/performance_tests/jmeter_scripts/api_load_test.jmx -l reports/performance/results.jtl -e -o reports/performance/dashboard
+                '''
+                
+                // Archive performance test results
+                stash includes: 'reports/performance/**/*', name: 'performance-test-results'
+            }
+            post {
+                always {
+                    sh 'mkdir -p ${ALLURE_RESULTS_DIR}/performance'
+                    sh 'cp -r reports/performance/* ${ALLURE_RESULTS_DIR}/performance/ || true'
+                }
+            }
+        }
+        
+        stage('Generate Reports') {
+            agent {
+                docker {
+                    image 'frankescobar/allure-docker-service'
+                }
+            }
+            steps {
+                // Unstash all test results
+                unstash 'python-test-results'
+                unstash 'js-test-results'
+                unstash 'java-test-results'
+                unstash 'performance-test-results'
+                
+                // Generate Allure report
+                sh "allure generate ${ALLURE_RESULTS_DIR} -o allure-report --clean"
+                
+                // Archive the report
+                archiveArtifacts artifacts: 'allure-report/**', fingerprint: true
+            }
+            post {
+                always {
+                    // Publish the Allure report
+                    allure([
+                        includeProperties: false,
+                        jdk: '',
+                        properties: [],
+                        reportBuildPolicy: 'ALWAYS',
+                        results: [[path: "${ALLURE_RESULTS_DIR}"]]
+                    ])
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Clean workspace
+            cleanWs()
+        }
+        success {
+            // Send success notification
+            emailext (
+                subject: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """<p>SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+                <p>Check console output at <a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a></p>""",
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+            )
+        }
+        failure {
+            // Send failure notification
+            emailext (
+                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """<p>FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+                <p>Check console output at <a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a></p>""",
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+            )
+        }
+    }

@@ -1,0 +1,61 @@
+{
+  "name": "api-testing-framework",
+  "version": "1.0.0",
+  "description": "Multi-language API Testing Framework for automated testing of RESTful APIs",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha 'tests/**/*.js'",
+    "test:functional": "mocha 'tests/functional_tests/javascript/**/*.js' --reporter mochawesome --reporter-options reportDir=reports/functional,reportFilename=functional-report",
+    "test:integration": "mocha 'tests/integration_tests/javascript/**/*.js' --reporter mochawesome --reporter-options reportDir=reports/integration,reportFilename=integration-report",
+    "test:security": "mocha 'tests/security_tests/javascript/**/*.js' --reporter mochawesome --reporter-options reportDir=reports/security,reportFilename=security-report",
+    "test:performance": "node tests/performance_tests/javascript/load_test.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/api-testing-framework.git"
+  },
+  "keywords": [
+    "api",
+    "testing",
+    "automation",
+    "rest",
+    "framework",
+    "qa"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/api-testing-framework/issues"
+  },
+  "homepage": "https://github.com/yourusername/api-testing-framework#readme",
+  "dependencies": {
+    "axios": "^1.3.4",
+    "axios-retry": "^3.4.0",
+    "chai": "^4.3.7",
+    "chai-json-schema": "^1.5.1",
+    "dotenv": "^16.0.3",
+    "jsonwebtoken": "^9.0.0",
+    "lodash": "^4.17.21",
+    "mocha": "^10.2.0",
+    "mochawesome": "^7.1.3"
+  },
+  "devDependencies": {
+    "ajv": "^8.12.0",
+    "allure-commandline": "^2.21.0",
+    "allure-js-commons": "^2.1.0",
+    "allure-mocha": "^2.1.0",
+    "eslint": "^8.35.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "k6": "^0.0.0",
+    "owasp-zap": "^0.3.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

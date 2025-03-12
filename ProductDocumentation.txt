@@ -1,0 +1,33 @@
+# Product Documentation
+
+## Overview
+API Testing Framework to facilitate automated testing for RESTful APIs. Designed to support functional, integration, security, and performance tests across Python, JavaScript, and Java.
+
+## Supported Testing Types:
+- Functional Testing
+- Integration/E2E Testing
+- Performance/Load Testing
+- Security Testing
+
+## Technologies:
+- Python (pytest, requests, assertpy)
+- JavaScript/Node.js (Jest, Mocha, Supertest)
+- Java (Rest-Assured, JUnit)
+
+## Target Users:
+- QA Engineers
+- Automation Engineers
+- Developers
+- DevOps Engineers
+
+## CI/CD Integration:
+- GitHub Actions
+- GitLab CI/CD
+- Jenkins
+
+## Reporting:
+- Allure Reports (Unified reporting)
+
+## Audience:
+Automation QA Engineers, QA Leads, Developers, DevOps teams
+

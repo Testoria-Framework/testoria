@@ -1,0 +1,120 @@
+{
+  "environments": {
+    "dev": {
+      "base_url": "https://api-dev.example.com",
+      "timeout": 30000,
+      "retry_attempts": 3,
+      "retry_delay": 1000,
+      "auth": {
+        "type": "oauth2",
+        "client_id": "${DEV_CLIENT_ID}",
+        "client_secret": "${DEV_CLIENT_SECRET}",
+        "auth_url": "https://auth-dev.example.com/oauth/token"
+      }
+    },
+    "test": {
+      "base_url": "https://api-test.example.com",
+      "timeout": 30000,
+      "retry_attempts": 3,
+      "retry_delay": 1000,
+      "auth": {
+        "type": "oauth2",
+        "client_id": "${TEST_CLIENT_ID}",
+        "client_secret": "${TEST_CLIENT_SECRET}",
+        "auth_url": "https://auth-test.example.com/oauth/token"
+      }
+    },
+    "staging": {
+      "base_url": "https://api-staging.example.com",
+      "timeout": 30000,
+      "retry_attempts": 2,
+      "retry_delay": 1000,
+      "auth": {
+        "type": "oauth2",
+        "client_id": "${STAGING_CLIENT_ID}",
+        "client_secret": "${STAGING_CLIENT_SECRET}",
+        "auth_url": "https://auth-staging.example.com/oauth/token"
+      }
+    },
+    "prod": {
+      "base_url": "https://api.example.com",
+      "timeout": 30000,
+      "retry_attempts": 1,
+      "retry_delay": 2000,
+      "auth": {
+        "type": "oauth2",
+        "client_id": "${PROD_CLIENT_ID}",
+        "client_secret": "${PROD_CLIENT_SECRET}",
+        "auth_url": "https://auth.example.com/oauth/token"
+      }
+    }
+  },
+  "test_settings": {
+    "functional": {
+      "max_response_time": 2000,
+      "parallel_execution": true,
+      "retries_on_failure": 1
+    },
+    "integration": {
+      "max_response_time": 5000,
+      "parallel_execution": false,
+      "retries_on_failure": 2
+    },
+    "performance": {
+      "users": 50,
+      "ramp_up_period": 10,
+      "duration": 60,
+      "think_time": 1000,
+      "max_response_time": 1000,
+      "percentile_thresholds": {
+        "95%": 800,
+        "99%": 1500
+      }
+    },
+    "security": {
+      "scan_levels": ["low", "medium", "high"],
+      "skip_tests": []
+    }
+  },
+  "reporting": {
+    "allure": {
+      "enabled": true,
+      "report_dir": "reports/allure-results"
+    },
+    "json": {
+      "enabled": true,
+      "report_dir": "reports/json-results"
+    },
+    "html": {
+      "enabled": true,
+      "report_dir": "reports/html-results"
+    },
+    "console": {
+      "enabled": true,
+      "verbose": true
+    }
+  },
+  "mocks": {
+    "wiremock": {
+      "port": 8080,
+      "root_dir": "mocks/wiremock_configs"
+    },
+    "mockserver": {
+      "port": 1080,
+      "root_dir": "mocks/mockserver_configs"
+    }
+  },
+  "logging": {
+    "level": "info",
+    "file": {
+      "enabled": true,
+      "path": "logs/api_tests.log",
+      "max_size": "10MB",
+      "backup_count": 5
+    },
+    "console": {
+      "enabled": true,
+      "colored": true
+    }
+  }
+}

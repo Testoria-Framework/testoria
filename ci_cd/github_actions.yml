@@ -1,0 +1,219 @@
+name: API Testing Framework CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at midnight
+    - cron: '0 0 * * *'
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+        node-version: [16.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    # Python linting
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pylint
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    
+    - name: Lint Python files
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        pylint --disable=all --enable=unused-import,unused-variable core/ tests/
+    
+    # JavaScript linting
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install JavaScript dependencies
+      run: |
+        npm ci
+    
+    - name: Lint JavaScript files
+      run: |
+        npm run lint
+
+  test-python:
+    name: Run Python Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10']
+        test-type: ['functional', 'integration', 'security']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov allure-pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    
+    - name: Run ${{ matrix.test-type }} tests
+      env:
+        ENVIRONMENT: test
+        API_KEY: ${{ secrets.API_TEST_KEY }}
+      run: |
+        python -m pytest tests/${{ matrix.test-type }}_tests/python/ -v --alluredir=reports/allure-results
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-${{ matrix.test-type }}-test-results
+        path: reports/allure-results
+        retention-days: 7
+
+  test-javascript:
+    name: Run JavaScript Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+        test-type: ['functional', 'integration', 'security']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+    
+    - name: Run ${{ matrix.test-type }} tests
+      env:
+        ENVIRONMENT: test
+        API_KEY: ${{ secrets.API_TEST_KEY }}
+      run: |
+        npm run test:${{ matrix.test-type }}
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: js-${{ matrix.test-type }}-test-results
+        path: reports/allure-results
+        retention-days: 7
+
+  test-java:
+    name: Run Java Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [11, 17]
+        test-type: ['functional', 'integration', 'security']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK ${{ matrix.java-version }}
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Run ${{ matrix.test-type }} tests with Maven
+      env:
+        ENVIRONMENT: test
+        API_KEY: ${{ secrets.API_TEST_KEY }}
+      run: |
+        mvn test -Dtest=*${{ matrix.test-type }}*
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: java-${{ matrix.test-type }}-test-results
+        path: target/allure-results
+        retention-days: 7
+
+  performance-test:
+    name: Run Performance Tests
+    needs: [test-python, test-javascript, test-java]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JMeter
+      run: |
+        wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.5.tgz
+        tar -xzf apache-jmeter-5.5.tgz
+        
+    - name: Run JMeter performance tests
+      run: |
+        ./apache-jmeter-5.5/bin/jmeter -n -t tests/performance_tests/jmeter_scripts/api_load_test.jmx -l reports/performance/results.jtl -e -o reports/performance/dashboard
+      
+    - name: Upload performance test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-test-results
+        path: reports/performance
+        retention-days: 7
+
+  generate-report:
+    name: Generate Allure Report
+    needs: [test-python, test-javascript, test-java, performance-test]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download all test results
+      uses: actions/download-artifact@v3
+      with:
+        path: allure-results
+    
+    - name: Merge test results
+      run: |
+        mkdir -p merged-results
+        find allure-results -type f -name "*.json" -o -name "*.xml" | xargs cp -t merged-results/ || true
+    
+    - name: Generate Allure report
+      uses: simple-elf/allure-report-action@master
+      with:
+        allure_results: merged-results
+        allure_report: allure-report
+        allure_history: allure-history
+    
+    - name: Deploy report to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: ./allure-report
+        keep_files: true

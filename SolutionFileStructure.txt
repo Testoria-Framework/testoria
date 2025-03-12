@@ -1,0 +1,49 @@
+api_testing_framework/
+├── core/
+│   ├── clients/
+│   │   ├── base_api_client.py
+│   │   ├── base_api_client.js
+│   │   └── base_api_client.java
+│   ├── assertions/
+│   │   ├── python_assertions.py
+│   │   ├── js_assertions.js
+│   │   └── java_assertions.java
+│   ├── config/
+│   │   ├── config.json
+│   │   ├── env_loader.py
+│   │   └── env_loader.js
+│   ├── utils/
+│   │   ├── common_helpers.py
+│   │   └── common_helpers.js
+│   └── reporting/
+│       ├── allure_reporter.py
+│       └── allure_reporter.js
+│
+├── tests/
+│   ├── functional_tests/
+│   │   ├── python/
+│   │   ├── javascript/
+│   │   └── java/
+│   ├── integration_tests/
+│   ├── performance_tests/
+│   └── security_tests/
+│
+├── mocks/
+│   ├── wiremock_configs/
+│   └── mockserver_configs/
+│
+├── ci_cd/
+│   ├── github_actions.yml
+│   ├── gitlab_ci.yml
+│   └── jenkinsfile
+│
+├── reports/
+│   └── allure_results/
+│
+├── scripts/
+│   └── run_tests.sh
+│
+├── requirements.txt
+├── package.json
+└── pom.xml
+

@@ -1,0 +1,180 @@
+stages:
+  - lint
+  - test
+  - performance
+  - report
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+  ALLURE_RESULTS_DIR: "$CI_PROJECT_DIR/allure-results"
+  PYTHON_VERSION: "3.9"
+  NODE_VERSION: "16"
+  JAVA_VERSION: "11"
+
+# Cache dependencies for faster builds
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .pip-cache/
+    - node_modules/
+    - .m2/repository/
+
+# Lint checks for Python and JavaScript
+python-lint:
+  stage: lint
+  image: python:${PYTHON_VERSION}-slim
+  script:
+    - pip install flake8 pylint
+    - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    - pylint --disable=all --enable=unused-import,unused-variable core/ tests/
+
+js-lint:
+  stage: lint
+  image: node:${NODE_VERSION}-slim
+  script:
+    - npm ci
+    - npm run lint
+
+# Python tests by test type
+.python-test-template: &python-test
+  image: python:${PYTHON_VERSION}
+  stage: test
+  before_script:
+    - pip install pytest pytest-cov allure-pytest
+    - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+  after_script:
+    - mkdir -p ${ALLURE_RESULTS_DIR}
+    - cp -r reports/allure-results/* ${ALLURE_RESULTS_DIR}/ || true
+  artifacts:
+    paths:
+      - reports/allure-results/
+
+python-functional-tests:
+  <<: *python-test
+  script:
+    - export ENVIRONMENT=test
+    - python -m pytest tests/functional_tests/python/ -v --alluredir=reports/allure-results
+
+python-integration-tests:
+  <<: *python-test
+  script:
+    - export ENVIRONMENT=test
+    - python -m pytest tests/integration_tests/python/ -v --alluredir=reports/allure-results
+
+python-security-tests:
+  <<: *python-test
+  script:
+    - export ENVIRONMENT=test
+    - python -m pytest tests/security_tests/python/ -v --alluredir=reports/allure-results
+
+# JavaScript tests by test type
+.js-test-template: &js-test
+  image: node:${NODE_VERSION}
+  stage: test
+  before_script:
+    - npm ci
+  after_script:
+    - mkdir -p ${ALLURE_RESULTS_DIR}
+    - cp -r reports/allure-results/* ${ALLURE_RESULTS_DIR}/ || true
+  artifacts:
+    paths:
+      - reports/allure-results/
+
+js-functional-tests:
+  <<: *js-test
+  script:
+    - export ENVIRONMENT=test
+    - npm run test:functional
+
+js-integration-tests:
+  <<: *js-test
+  script:
+    - export ENVIRONMENT=test
+    - npm run test:integration
+
+js-security-tests:
+  <<: *js-test
+  script:
+    - export ENVIRONMENT=test
+    - npm run test:security
+
+# Java tests by test type
+.java-test-template: &java-test
+  image: maven:3.8.6-openjdk-${JAVA_VERSION}
+  stage: test
+  before_script:
+    - export MAVEN_OPTS="-Dmaven.repo.local=.m2/repository"
+  after_script:
+    - mkdir -p ${ALLURE_RESULTS_DIR}
+    - cp -r target/allure-results/* ${ALLURE_RESULTS_DIR}/ || true
+  artifacts:
+    paths:
+      - target/allure-results/
+
+java-functional-tests:
+  <<: *java-test
+  script:
+    - export ENVIRONMENT=test
+    - mvn test -Dtest="*Functional*"
+
+java-integration-tests:
+  <<: *java-test
+  script:
+    - export ENVIRONMENT=test
+    - mvn test -Dtest="*Integration*"
+
+java-security-tests:
+  <<: *java-test
+  script:
+    - export ENVIRONMENT=test
+    - mvn test -Dtest="*Security*"
+
+# Performance tests
+performance-tests:
+  stage: performance
+  image: openjdk:${JAVA_VERSION}-slim
+  before_script:
+    - apt-get update && apt-get install -y wget
+    - wget https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.5.tgz
+    - tar -xzf apache-jmeter-5.5.tgz
+  script:
+    - export ENVIRONMENT=test
+    - ./apache-jmeter-5.5/bin/jmeter -n -t tests/performance_tests/jmeter_scripts/api_load_test.jmx -l reports/performance/results.jtl -e -o reports/performance/dashboard
+  after_script:
+    - mkdir -p ${ALLURE_RESULTS_DIR}/performance
+    - cp -r reports/performance/* ${ALLURE_RESULTS_DIR}/performance/ || true
+  artifacts:
+    paths:
+      - reports/performance/
+  dependencies: []
+
+# Generate consolidated report
+generate-report:
+  stage: report
+  image: frankescobar/allure-docker-service
+  script:
+    - allure generate ${ALLURE_RESULTS_DIR} -o allure-report --clean
+  artifacts:
+    paths:
+      - allure-report/
+    expire_in: 1 week
+  dependencies: []
+
+# Scheduled nightly test runs
+nightly-all-tests:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  only:
+    - schedules
+  script:
+    - pip install pytest pytest-cov allure-pytest
+    - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - export ENVIRONMENT=test
+    - python -m pytest tests/ -v --alluredir=reports/allure-results
+  after_script:
+    - mkdir -p ${ALLURE_RESULTS_DIR}/nightly
+    - cp -r reports/allure-results/* ${ALLURE_RESULTS_DIR}/nightly/ || true
+  artifacts:
+    paths:
+      - reports/allure-results/

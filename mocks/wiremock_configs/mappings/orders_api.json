@@ -1,0 +1,269 @@
+[
+  {
+    "request": {
+      "method": "GET",
+      "url": "/orders"
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": [
+        {
+          "id": "ORD-001",
+          "customer_id": 123,
+          "items": [
+            {
+              "product_id": 1,
+              "quantity": 2,
+              "price": 10.99
+            },
+            {
+              "product_id": 2,
+              "quantity": 1,
+              "price": 24.99
+            }
+          ],
+          "total": 46.97,
+          "status": "shipped",
+          "created_at": "2023-01-10T09:30:00Z",
+          "updated_at": "2023-01-11T14:20:00Z"
+        },
+        {
+          "id": "ORD-002",
+          "customer_id": 456,
+          "items": [
+            {
+              "product_id": 3,
+              "quantity": 1,
+              "price": 99.99
+            }
+          ],
+          "total": 99.99,
+          "status": "pending",
+          "created_at": "2023-01-15T11:45:00Z",
+          "updated_at": "2023-01-15T11:45:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "urlPattern": "/orders/ORD-[0-9]+"
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": "{{request.pathSegments.[1]}}",
+        "customer_id": 123,
+        "items": [
+          {
+            "product_id": 1,
+            "quantity": 2,
+            "price": 10.99
+          },
+          {
+            "product_id": 2,
+            "quantity": 1,
+            "price": 24.99
+          }
+        ],
+        "total": 46.97,
+        "status": "shipped",
+        "created_at": "2023-01-10T09:30:00Z",
+        "updated_at": "2023-01-11T14:20:00Z"
+      },
+      "transformers": ["response-template"]
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/orders",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.customer_id"
+        },
+        {
+          "matchesJsonPath": "$.items"
+        }
+      ]
+    },
+    "response": {
+      "status": 201,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": "ORD-{{randomValue length=3 type='NUMERIC'}}",
+        "customer_id": "{{jsonPath request.body '$.customer_id'}}",
+        "items": "{{jsonPath request.body '$.items'}}",
+        "total": 46.97,
+        "status": "pending",
+        "created_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z",
+        "updated_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z"
+      },
+      "transformers": ["response-template"]
+    }
+  },
+  {
+    "request": {
+      "method": "PATCH",
+      "urlPattern": "/orders/ORD-[0-9]+",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.status"
+        }
+      ]
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": "{{request.pathSegments.[1]}}",
+        "customer_id": 123,
+        "items": [
+          {
+            "product_id": 1,
+            "quantity": 2,
+            "price": 10.99
+          },
+          {
+            "product_id": 2,
+            "quantity": 1,
+            "price": 24.99
+          }
+        ],
+        "total": 46.97,
+        "status": "{{jsonPath request.body '$.status'}}",
+        "tracking_number": "{{jsonPath request.body '$.tracking_number'}}",
+        "created_at": "2023-01-10T09:30:00Z",
+        "updated_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z"
+      },
+      "transformers": ["response-template"]
+    }
+  },
+  {
+    "request": {
+      "method": "PATCH",
+      "urlPattern": "/orders/ORD-[0-9]+/cancel",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.cancellation_reason"
+        }
+      ]
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": "{{request.pathSegments.[1]}}",
+        "customer_id": 123,
+        "items": [
+          {
+            "product_id": 1,
+            "quantity": 2,
+            "price": 10.99
+          },
+          {
+            "product_id": 2,
+            "quantity": 1,
+            "price": 24.99
+          }
+        ],
+        "total": 46.97,
+        "status": "cancelled",
+        "cancellation_reason": "{{jsonPath request.body '$.cancellation_reason'}}",
+        "created_at": "2023-01-10T09:30:00Z",
+        "updated_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z",
+        "cancelled_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z"
+      },
+      "transformers": ["response-template"]
+    }
+  },
+  {
+    "request": {
+      "method": "DELETE",
+      "urlPattern": "/orders/ORD-[0-9]+"
+    },
+    "response": {
+      "status": 204
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "url": "/orders/999999"
+    },
+    "response": {
+      "status": 404,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "error": "Order not found"
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/orders",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$",
+          "doesNotMatch": ".*\"customer_id\".*"
+        }
+      ]
+    },
+    "response": {
+      "status": 400,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "errors": [
+          {
+            "field": "customer_id",
+            "message": "Customer ID is required"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/orders",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$",
+          "doesNotMatch": ".*\"items\".*"
+        }
+      ]
+    },
+    "response": {
+      "status": 400,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "errors": [
+          {
+            "field": "items",
+            "message": "Items are required"
+          }
+        ]
+      }
+    }
+  }
+]

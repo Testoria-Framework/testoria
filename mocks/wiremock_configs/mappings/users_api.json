@@ -1,0 +1,198 @@
+[
+  {
+    "request": {
+      "method": "GET",
+      "url": "/users"
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": [
+        {
+          "id": 1,
+          "name": "John Doe",
+          "email": "john.doe@example.com",
+          "phone": "+1234567890",
+          "created_at": "2023-01-01T10:00:00Z",
+          "updated_at": "2023-01-01T10:00:00Z"
+        },
+        {
+          "id": 2,
+          "name": "Jane Smith",
+          "email": "jane.smith@example.com",
+          "phone": "+1987654321",
+          "created_at": "2023-01-02T11:00:00Z",
+          "updated_at": "2023-01-02T11:00:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "urlPattern": "/users/[0-9]+"
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "created_at": "2023-01-01T10:00:00Z",
+        "updated_at": "2023-01-01T10:00:00Z"
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/users",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.name"
+        },
+        {
+          "matchesJsonPath": "$.email"
+        }
+      ]
+    },
+    "response": {
+      "status": 201,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": 3,
+        "name": "{{jsonPath request.body '$.name'}}",
+        "email": "{{jsonPath request.body '$.email'}}",
+        "phone": "{{jsonPath request.body '$.phone'}}",
+        "created_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z",
+        "updated_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z"
+      },
+      "transformers": ["response-template"]
+    }
+  },
+  {
+    "request": {
+      "method": "PUT",
+      "urlPattern": "/users/[0-9]+",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$"
+        }
+      ]
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "id": "{{request.pathSegments.[1]}}",
+        "name": "{{jsonPath request.body '$.name'}}",
+        "email": "{{jsonPath request.body '$.email'}}",
+        "phone": "{{jsonPath request.body '$.phone'}}",
+        "created_at": "2023-01-01T10:00:00Z",
+        "updated_at": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z"
+      },
+      "transformers": ["response-template"]
+    }
+  },
+  {
+    "request": {
+      "method": "DELETE",
+      "urlPattern": "/users/[0-9]+"
+    },
+    "response": {
+      "status": 204
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/users",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.name",
+          "equalTo": ""
+        }
+      ]
+    },
+    "response": {
+      "status": 400,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "errors": [
+          {
+            "field": "name",
+            "message": "Name cannot be empty"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "url": "/users",
+      "bodyPatterns": [
+        {
+          "matchesJsonPath": "$.email",
+          "doesNotMatch": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+        }
+      ]
+    },
+    "response": {
+      "status": 400,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "errors": [
+          {
+            "field": "email",
+            "message": "Invalid email format"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "urlPattern": "/users/[a-zA-Z]+"
+    },
+    "response": {
+      "status": 400,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "error": "Invalid user ID format"
+      }
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "url": "/users/999"
+    },
+    "response": {
+      "status": 404,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "jsonBody": {
+        "error": "User not found"
+      }
+    }
+  }
+]

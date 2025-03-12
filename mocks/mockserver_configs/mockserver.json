@@ -1,0 +1,391 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/users"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": [
+        {
+          "id": 1,
+          "name": "John Doe",
+          "email": "john.doe@example.com",
+          "phone": "+1234567890",
+          "created_at": "2023-01-01T10:00:00Z",
+          "updated_at": "2023-01-01T10:00:00Z"
+        },
+        {
+          "id": 2,
+          "name": "Jane Smith",
+          "email": "jane.smith@example.com",
+          "phone": "+1987654321",
+          "created_at": "2023-01-02T11:00:00Z",
+          "updated_at": "2023-01-02T11:00:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/users/1"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "created_at": "2023-01-01T10:00:00Z",
+        "updated_at": "2023-01-01T10:00:00Z"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/users",
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "name": "${json-unit.any-string}",
+          "email": "${json-unit.any-string}"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 201,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "id": 3,
+        "name": "${request.body.json.name}",
+        "email": "${request.body.json.email}",
+        "phone": "${request.body.json.phone}",
+        "created_at": "${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}",
+        "updated_at": "${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "PUT",
+      "path": "/users/1",
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "name": "${json-unit.any-string}"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "id": 1,
+        "name": "${request.body.json.name}",
+        "email": "${request.body.json.email}",
+        "phone": "${request.body.json.phone}",
+        "created_at": "2023-01-01T10:00:00Z",
+        "updated_at": "${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "DELETE",
+      "path": "/users/1"
+    },
+    "httpResponse": {
+      "statusCode": 204
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/users",
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "name": ""
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 400,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "errors": [
+          {
+            "field": "name",
+            "message": "Name cannot be empty"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/users/999"
+    },
+    "httpResponse": {
+      "statusCode": 404,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "error": "User not found"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/products"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": [
+        {
+          "id": "P001",
+          "name": "Smartphone X",
+          "description": "Latest smartphone with advanced features",
+          "price": 799.99,
+          "category": "electronics",
+          "stock": 100,
+          "sku": "ELEC-SP-001",
+          "created_at": "2023-01-05T08:30:00Z",
+          "updated_at": "2023-01-05T08:30:00Z"
+        },
+        {
+          "id": "P002",
+          "name": "Laptop Pro",
+          "description": "High-performance laptop for professionals",
+          "price": 1299.99,
+          "category": "electronics",
+          "stock": 50,
+          "sku": "ELEC-LP-002",
+          "created_at": "2023-01-06T09:45:00Z",
+          "updated_at": "2023-01-06T09:45:00Z"
+        },
+        {
+          "id": "P003",
+          "name": "Running Shoes",
+          "description": "Comfortable running shoes with cushioned soles",
+          "price": 89.99,
+          "category": "sportswear",
+          "stock": 200,
+          "sku": "SPORT-RS-003",
+          "created_at": "2023-01-07T10:15:00Z",
+          "updated_at": "2023-01-07T10:15:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/products",
+      "queryStringParameters": {
+        "category": ["electronics"]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": [
+        {
+          "id": "P001",
+          "name": "Smartphone X",
+          "description": "Latest smartphone with advanced features",
+          "price": 799.99,
+          "category": "electronics",
+          "stock": 100,
+          "sku": "ELEC-SP-001",
+          "created_at": "2023-01-05T08:30:00Z",
+          "updated_at": "2023-01-05T08:30:00Z"
+        },
+        {
+          "id": "P002",
+          "name": "Laptop Pro",
+          "description": "High-performance laptop for professionals",
+          "price": 1299.99,
+          "category": "electronics",
+          "stock": 50,
+          "sku": "ELEC-LP-002",
+          "created_at": "2023-01-06T09:45:00Z",
+          "updated_at": "2023-01-06T09:45:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/orders"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": [
+        {
+          "id": "ORD-001",
+          "customer_id": 123,
+          "items": [
+            {
+              "product_id": "P001",
+              "quantity": 2,
+              "price": 10.99
+            },
+            {
+              "product_id": "P002",
+              "quantity": 1,
+              "price": 24.99
+            }
+          ],
+          "total": 46.97,
+          "status": "shipped",
+          "created_at": "2023-01-10T09:30:00Z",
+          "updated_at": "2023-01-11T14:20:00Z"
+        },
+        {
+          "id": "ORD-002",
+          "customer_id": 456,
+          "items": [
+            {
+              "product_id": "P003",
+              "quantity": 1,
+              "price": 99.99
+            }
+          ],
+          "total": 99.99,
+          "status": "pending",
+          "created_at": "2023-01-15T11:45:00Z",
+          "updated_at": "2023-01-15T11:45:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/users/1/orders"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": [
+        {
+          "id": "ORD-003",
+          "customer_id": 1,
+          "items": [
+            {
+              "product_id": "P001",
+              "quantity": 1,
+              "price": 799.99
+            }
+          ],
+          "total": 799.99,
+          "status": "delivered",
+          "created_at": "2023-01-20T14:30:00Z",
+          "updated_at": "2023-01-22T09:15:00Z"
+        }
+      ]
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/health"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "status": "ok",
+        "version": "1.0.0",
+        "database": "connected",
+        "uptime": "3d 12h 45m"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/version"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "version": "1.0.0",
+        "build": "2023.03.15",
+        "environment": "dev"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/protected-resource",
+      "headers": {
+        "Authorization": ["Bearer valid_token"]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "message": "Access granted to protected resource"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/protected-resource"
+    },
+    "httpResponse": {
+      "statusCode": 401,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "error": "Unauthorized",
+        "message": "Authentication required"
+      }
+    }
+  }
+]
