@@ -1,0 +1,100 @@
+name: API Testing Framework CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        language: [python, javascript, java]
+        test-type: [functional, integration, security]
+        include:
+          - language: python
+            python-version: 3.9
+          - language: javascript
+            node-version: 16.x
+          - language: java
+            java-version: 11
+
+    steps:
+    - uses: actions/checkout@v3
+
+    # Python Setup
+    - name: Set up Python ${{ matrix.python-version }}
+      if: matrix.language == 'python'
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Python dependencies
+      if: matrix.language == 'python'
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    # JavaScript Setup
+    - name: Set up Node.js ${{ matrix.node-version }}
+      if: matrix.language == 'javascript'
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Install JavaScript dependencies
+      if: matrix.language == 'javascript'
+      run: |
+        npm install
+        npm install jest supertest
+
+    # Java Setup
+    - name: Set up Java ${{ matrix.java-version }}
+      if: matrix.language == 'java'
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'adopt'
+        java-version: ${{ matrix.java-version }}
+    
+    - name: Install Java dependencies
+      if: matrix.language == 'java'
+      run: |
+        mvn clean install
+        mvn dependency:resolve
+
+    # Run Tests
+    - name: Run ${{ matrix.language }} ${{ matrix.test-type }} Tests
+      run: |
+        ./scripts/run_tests.sh \
+          --language ${{ matrix.language }} \
+          --type ${{ matrix.test-type }} \
+          --env ci
+
+    # Upload test reports
+    - name: Upload Allure Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: allure-report-${{ matrix.language }}-${{ matrix.test-type }}
+        path: reports/allure-report
+        retention-days: 7
+
+  # Publish release on tag
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ./reports/allure-report.zip
+          ./dist/*.tar.gz
+        body_path: CHANGELOG.md

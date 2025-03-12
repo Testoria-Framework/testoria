@@ -1,0 +1,109 @@
+image: ubuntu:latest
+
+stages:
+  - setup
+  - test
+  - report
+  - release
+
+variables:
+  PYTHON_VERSION: "3.9"
+  NODE_VERSION: "16.x"
+  JAVA_VERSION: "11"
+
+# Setup stage for different languages
+setup:python:
+  stage: setup
+  image: python:$PYTHON_VERSION
+  script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt
+  artifacts:
+    paths:
+      - .venv/
+
+setup:javascript:
+  stage: setup
+  image: node:$NODE_VERSION
+  script:
+    - npm install
+  artifacts:
+    paths:
+      - node_modules/
+
+setup:java:
+  stage: setup
+  image: maven:3.8.1-openjdk-11
+  script:
+    - mvn clean install -DskipTests
+  artifacts:
+    paths:
+      - target/
+
+# Test stages for different languages and test types
+.test_template: &test_definition
+  stage: test
+  script:
+    - ./scripts/run_tests.sh --language $LANGUAGE --type $TEST_TYPE --env ci
+  artifacts:
+    reports:
+      junit: reports/junit-report.xml
+    paths:
+      - reports/
+
+test:python:functional:
+  <<: *test_definition
+  variables:
+    LANGUAGE: python
+    TEST_TYPE: functional
+
+test:python:integration:
+  <<: *test_definition
+  variables:
+    LANGUAGE: python
+    TEST_TYPE: integration
+
+test:javascript:functional:
+  <<: *test_definition
+  variables:
+    LANGUAGE: javascript
+    TEST_TYPE: functional
+
+test:java:security:
+  <<: *test_definition
+  variables:
+    LANGUAGE: java
+    TEST_TYPE: security
+
+# Reporting stage
+generate:allure_report:
+  stage: report
+  script:
+    - pip install allure-pytest
+    - allure generate reports/allure-results -o reports/allure-report
+  artifacts:
+    paths:
+      - reports/allure-report
+    expire_in: 1 week
+
+# Release stage
+release:create:
+  stage: release
+  only:
+    - tags
+  script:
+    - echo "Creating release for $CI_COMMIT_TAG"
+    - mkdir -p release
+    - tar -czvf release/api-testing-framework-$CI_COMMIT_TAG.tar.gz .
+  artifacts:
+    paths:
+      - release/*.tar.gz
+  release:
+    tag_name: $CI_COMMIT_TAG
+    description: 'API Testing Framework Release'
+    assets:
+      links:
+        - name: 'Allure Report'
+          url: 'reports/allure-report'
+        - name: 'Release Package'
+          url: 'release/api-testing-framework-$CI_COMMIT_TAG.tar.gz'
