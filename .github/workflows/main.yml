@@ -65,13 +65,13 @@ jobs:
       - name: Execute Tests
         run: |
           chmod +x scripts/run_tests.sh
-          ./scripts/run_tests.sh --language java --type functional --env test
+          ./scripts/run_tests.sh --language ${{ matrix.language }} --type ${{ matrix.test-type }} --env test
     
       # Upload test reports
       - uses: actions/upload-artifact@v4
         with:
           name: allure-report-${{ matrix.language }}-${{ matrix.test-type }}
-          path: reports/allure_results/${{ matrix.language }}/${{ matrix.test-type }}
+          path: reports/allure-results/${{ matrix.language }}/${{ matrix.test-type }}
 
   # Create Release (optional)
   release:
