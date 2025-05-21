@@ -1,0 +1,4 @@
+com/apiframework/tests/functional/UserApiFunctionalTest.class
+com/apiframework/tests/functional/MockFunctionalTest.class
+com/apiframework/tests/functional/OrderApiFunctionalTest.class
+com/apiframework/tests/functional/SimpleFunctionalTest.class

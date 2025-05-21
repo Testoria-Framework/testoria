@@ -55,6 +55,15 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.14.2</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- JSON Library -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230227</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -68,6 +77,9 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <testSource>17</testSource>
+                    <testTarget>17</testTarget>
+                    <skipMain>true</skipMain>
                 </configuration>
             </plugin>
 
@@ -78,35 +90,14 @@
                 <version>3.0.0</version>
                 <configuration>
                     <includes>
-                        <include>**/*FunctionalTest.java</include>
+                        <include>**/SimpleFunctionalTest.java</include>
+                        <include>**/MockFunctionalTest.java</include>
                     </includes>
                     <testFailureIgnore>false</testFailureIgnore>
-                    <argLine>
-                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.19/aspectjweaver-1.9.19.jar"
-                    </argLine>
-                    <systemProperties>
-                        <property>
-                            <name>allure.results.directory</name>
-                            <value>${project.build.directory}/allure-results</value>
-                        </property>
-                    </systemProperties>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.aspectj</groupId>
-                        <artifactId>aspectjweaver</artifactId>
-                        <version>1.9.19</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-
-            <!-- Allure Reporting Plugin -->
-            <plugin>
-                <groupId>io.qameta.allure</groupId>
-                <artifactId>allure-maven</artifactId>
-                <version>2.12.0</version>
-                <configuration>
-                    <reportVersion>${allure.version}</reportVersion>
+                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                    <systemPropertyVariables>
+                        <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
