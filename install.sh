@@ -158,7 +158,10 @@ pkg_install() {  # pkg_install <generic-name>
 # --------------------------------------------------------------------------- python
 find_python() {
   local c
-  for c in "$PYTHON_BIN" python3 python "py -3"; do
+  local candidates=("$PYTHON_BIN" python3 python "py -3")
+  # On Windows "python3" is often the Microsoft Store stub or a different install.
+  [ "$PLATFORM" = windows ] && candidates=("$PYTHON_BIN" python "py -3" python3)
+  for c in "${candidates[@]}"; do
     [ -n "$c" ] || continue
     # shellcheck disable=SC2086
     if $c -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
@@ -260,7 +263,7 @@ ok "source: $INSTALL_DIR"
 step "Creating virtualenv"
 if [ ! -x "$(venv_python)" ]; then
   # shellcheck disable=SC2086
-  $PYTHON_BIN -m venv "$INSTALL_DIR/.venv" 2>/dev/null || {
+  $PYTHON_BIN -m venv "$INSTALL_DIR/.venv" || {
     [ "$PKG" = apt ] && [ "$INSTALL_SYSTEM_DEPS" = true ] && pkg_install python && $PYTHON_BIN -m venv "$INSTALL_DIR/.venv"
   } || die "Could not create a virtualenv. On Debian/Ubuntu install python3-venv (or use --system-deps)."
 fi

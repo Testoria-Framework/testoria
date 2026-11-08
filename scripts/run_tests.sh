@@ -139,7 +139,7 @@ run_specs() {
   [ "$TEST_TYPE" = performance ] && return 0
   local tags=()
   [ "$TEST_TYPE" != all ] && tags=(--tag "$TEST_TYPE")
-  "$PY" -m testoria run examples/demo-api --base-url "$BASE_URL" -o reports/specs "${tags[@]}" --allow-empty -q
+  "$PY" -m testoria run examples/demo-api --base-url "$BASE_URL" -o reports/specs ${tags[@]+"${tags[@]}"} --allow-empty -q
 }
 
 declare -a NAMES=() STATUSES=()
