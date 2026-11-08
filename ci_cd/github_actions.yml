@@ -14,9 +14,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python: ["3.9", "3.12"]
-        exclude:
-          - os: macos-latest
+        python: ["3.12"]
+        include:
+          # Oldest supported Python, on runners that still ship it
+          - os: ubuntu-22.04
+            python: "3.9"
+          - os: windows-latest
             python: "3.9"
     defaults:
       run:
