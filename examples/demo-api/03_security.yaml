@@ -1,0 +1,39 @@
+name: Demo API - security
+tags: [security]
+
+tests:
+  - name: protected endpoint without token
+    request: {method: GET, url: /users}
+    expect: {status: 401, headers: {WWW-Authenticate: Bearer}}
+
+  - name: invalid token is rejected
+    request: {method: GET, url: /orders, headers: {Authorization: Bearer forged.token}}
+    expect: {status: 401}
+
+  - name: admin endpoint needs admin role
+    request: {method: GET, url: /products/admin, headers: {Authorization: Bearer test_token}}
+    expect: {status: 403}
+
+  - name: markup in names is rejected
+    request:
+      method: POST
+      url: /users
+      headers: {Authorization: Bearer test_token}
+      json: {name: "<script>alert(1)</script>", email: "{{ $randomEmail }}"}
+    expect: {status: 400}
+
+  - name: security headers present
+    request: {method: GET, url: /health}
+    expect:
+      status: 200
+      headers:
+        X-Content-Type-Options: nosniff
+        Cache-Control: no-store
+
+  - name: malformed JSON returns 400 not 500
+    request:
+      method: POST
+      url: /users
+      headers: {Authorization: Bearer test_token, Content-Type: application/json}
+      body: "{not json"
+    expect: {status: 400}

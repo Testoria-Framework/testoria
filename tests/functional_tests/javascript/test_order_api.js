@@ -34,16 +34,14 @@ describe('Order API Tests', function() {
     }
   });
   
-  afterEach(function() {
-    // Clean up after each test
-    apiClient.clearAuthorization();
-    
-    // Delete test order if it was created
+  afterEach(async function() {
+    // Delete test order if it was created (before dropping the auth header)
     if (testOrderId) {
-      apiClient.delete(`/orders/${testOrderId}`)
+      await apiClient.delete(`/orders/${testOrderId}`)
         .catch(err => console.warn(`Failed to delete test order: ${err.message}`));
       testOrderId = null;
     }
+    apiClient.clearAuthorization();
   });
   
   it('should get all orders', async function() {

@@ -1,0 +1,2 @@
+# Optional load-testing tools (./install.sh --perf)
+locust>=2.12.1

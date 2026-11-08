@@ -1,0 +1,43 @@
+name: Demo API - order lifecycle
+tags: [integration]
+headers:
+  Authorization: Bearer test_token
+
+tests:
+  - name: read product stock
+    request: {method: GET, url: /products/P003}
+    expect: {status: 200, json: {$.stock: {type: integer, gte: 1}}}
+    extract: {stock_before: $.stock}
+
+  - name: place an order
+    request:
+      method: POST
+      url: /orders
+      json: {customer_id: 1, items: [{product_id: P003, quantity: 2}]}
+    expect:
+      status: 201
+      json:
+        $.status: pending
+        $.total: {approx: [159.98, 0.01]}
+        $.id: {matches: "^ORD-\\d+$"}
+    extract: {order_id: $.id}
+
+  - name: stock was decremented
+    request: {method: GET, url: /products/P003}
+    expect: {status: 200, json: {$.stock: {lt: "{{ stock_before }}"}}}
+
+  - name: move order through statuses ({{ status }})
+    data: [{status: processing}, {status: shipped}]
+    request: {method: PATCH, url: "/orders/{{ order_id }}", json: {status: "{{ status }}"}}
+    expect: {status: 200, json: {$.status: "{{ status }}"}}
+
+  - name: shipped orders cannot be cancelled
+    request: {method: PATCH, url: "/orders/{{ order_id }}/cancel", json: {cancellation_reason: changed mind}}
+    expect: {status: 409}
+
+  - name: customer order history contains the order
+    request: {method: GET, url: /users/1/orders}
+    expect:
+      status: 200
+      json:
+        $[*].id: {contains: "{{ order_id }}"}

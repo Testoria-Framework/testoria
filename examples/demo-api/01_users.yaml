@@ -1,0 +1,68 @@
+name: Demo API - users
+tags: [functional]
+headers:
+  Authorization: "Bearer {{ token }}"
+
+setup:
+  - name: log in
+    request:
+      method: POST
+      url: /auth/login
+      json: {username: testoria, password: s3cret}
+    expect: {status: 200, json: {$.token_type: Bearer}}
+    extract: {token: $.token}
+
+tests:
+  - name: health is public and fast
+    tags: [smoke]
+    request: {method: GET, url: /health, headers: {Authorization: null}}
+    expect: {status: 200, max_time_ms: 2000, json: {$.status: ok}}
+
+  - name: list users
+    request: {method: GET, url: /users}
+    expect:
+      status: 200
+      json:
+        $: {type: array, min_length: 2}
+        $[*].email: {not_empty: true}
+
+  - name: create user
+    request:
+      method: POST
+      url: /users
+      json: {name: "{{ $randomName }}", email: "{{ $randomEmail }}", phone: "+15550001"}
+    expect:
+      status: 201
+      schema:
+        type: object
+        required: [id, name, email, created_at]
+        properties:
+          id: {type: integer}
+          email: {type: string, format: email}
+    extract: {user_id: $.id, user_email: $.email}
+
+  - name: fetch created user
+    request: {method: GET, url: "/users/{{ user_id }}"}
+    expect: {status: 200, json: {$.id: "{{ user_id }}", $.email: "{{ user_email }}"}}
+
+  - name: duplicate email is rejected
+    request: {method: POST, url: /users, json: {name: Dup, email: "{{ user_email }}"}}
+    expect: {status: 409}
+
+  - name: validation errors - {{ case }}
+    data:
+      - {case: empty name, body: {name: "", email: a@b.co}, field: name}
+      - {case: bad email, body: {name: Ada, email: nope}, field: email}
+    request: {method: POST, url: /users, json: "{{ body }}"}
+    expect:
+      status: 400
+      json:
+        $.errors: {contains: {field: "{{ field }}"}}
+
+  - name: delete user
+    request: {method: DELETE, url: "/users/{{ user_id }}"}
+    expect: {status: 204}
+
+  - name: deleted user is gone
+    request: {method: GET, url: "/users/{{ user_id }}"}
+    expect: {status: 404, json: {$.error: User not found}}

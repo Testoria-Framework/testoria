@@ -12,7 +12,7 @@ class ConfigLoader:
     Supports environment variable substitution and environment-specific configs.
     """
     
-    def __init__(self, config_path: str = "core/config/config.json"):
+    def __init__(self, config_path: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")):
         """
         Initialize the ConfigLoader with the path to the config file.
         
@@ -75,7 +75,12 @@ class ConfigLoader:
             logger.error(f"Environment '{env}' not found in configuration")
             raise ValueError(f"Environment '{env}' not found in configuration")
         
-        return config['environments'][env]
+        env_config = dict(config['environments'][env])
+        # API_BASE_URL (or TESTORIA_BASE_URL) overrides the configured URL, e.g. to target a local server.
+        override = os.environ.get('API_BASE_URL') or os.environ.get('TESTORIA_BASE_URL')
+        if override:
+            env_config['base_url'] = override
+        return env_config
     
     def get_test_settings(self, test_type: str) -> Dict[str, Any]:
         """
@@ -189,7 +194,7 @@ class ConfigLoader:
             env_var_value = os.environ.get(env_var_name)
             
             if env_var_value is None:
-                logger.warning(f"Environment variable '{env_var_name}' not found")
+                logger.debug(f"Environment variable '{env_var_name}' not found")
                 return match.group(0)  # Return the original reference if not found
             
             return env_var_value

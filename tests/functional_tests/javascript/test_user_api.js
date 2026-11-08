@@ -34,16 +34,14 @@ describe('User API Tests', function() {
     }
   });
   
-  afterEach(function() {
-    // Clean up after each test
-    apiClient.clearAuthorization();
-    
-    // Delete test user if it was created
+  afterEach(async function() {
+    // Delete test user if it was created (before dropping the auth header)
     if (testUserId) {
-      apiClient.delete(`/users/${testUserId}`)
+      await apiClient.delete(`/users/${testUserId}`)
         .catch(err => console.warn(`Failed to delete test user: ${err.message}`));
       testUserId = null;
     }
+    apiClient.clearAuthorization();
   });
   
   it('should get all users', async function() {

@@ -19,6 +19,29 @@
         <allure.version>2.21.0</allure.version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>offline</id>
+            <activation>
+                <property><name>!env.API_BASE_URL</name></property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes combine.self="override">
+                                <include>**/SimpleFunctionalTest.java</include>
+                                <include>**/MockFunctionalTest.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <dependencies>
         <!-- JUnit 5 -->
         <dependency>
@@ -89,9 +112,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
+                    <!-- API suites need API_BASE_URL (scripts/run_tests.sh starts the demo API and sets it).
+                         Without it only the offline smoke tests run. -->
                     <includes>
-                        <include>**/SimpleFunctionalTest.java</include>
-                        <include>**/MockFunctionalTest.java</include>
+                        <include>**/*Test.java</include>
                     </includes>
                     <testFailureIgnore>false</testFailureIgnore>
                     <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>

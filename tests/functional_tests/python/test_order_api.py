@@ -270,21 +270,16 @@ class TestOrderApi:
         # Act
         allure_reporter.add_api_request("GET", f"/orders/{non_existent_id}", api_client.headers)
         
-        try:
-            response = api_client.get(f"/orders/{non_existent_id}")
-            assert False, "Expected 404 error for non-existent order"
-        except Exception as e:
-            # Extract the response from the exception
-            response = e.response
-            allure_reporter.add_api_response(response)
-            
-            # Assert
-            ApiAssertions.assert_status_code(response, 404)
-            ApiAssertions.assert_json_content_type(response)
-            
-            json_data = ApiAssertions.assert_json_body(response)
-            ApiAssertions.assert_json_has_key(json_data, 'error')
-            ApiAssertions.assert_json_value(json_data, 'error', 'Order not found')
+        response = api_client.get(f"/orders/{non_existent_id}")
+        allure_reporter.add_api_response(response)
+        
+        # Assert
+        ApiAssertions.assert_status_code(response, 404)
+        ApiAssertions.assert_json_content_type(response)
+        
+        json_data = ApiAssertions.assert_json_body(response)
+        ApiAssertions.assert_json_has_key(json_data, 'error')
+        ApiAssertions.assert_json_value(json_data, 'error', 'Order not found')
     
     @pytest.mark.functional
     def test_order_validation_error(self, api_client):
@@ -305,21 +300,16 @@ class TestOrderApi:
         # Act
         allure_reporter.add_api_request("POST", "/orders", api_client.headers, invalid_order_data)
         
-        try:
-            response = api_client.post("/orders", json_data=invalid_order_data)
-            assert False, "Expected 400 error for invalid order data"
-        except Exception as e:
-            # Extract the response from the exception
-            response = e.response
-            allure_reporter.add_api_response(response)
-            
-            # Assert
-            ApiAssertions.assert_status_code(response, 400)
-            ApiAssertions.assert_json_content_type(response)
-            
-            json_data = ApiAssertions.assert_json_body(response)
-            ApiAssertions.assert_json_has_key(json_data, 'errors')
-            
-            errors = json_data['errors']
-            assert any(error['field'] == 'customer_id' for error in errors), "Should have customer_id validation error"
-            assert any(error['field'] == 'items' for error in errors), "Should have items validation error"
+        response = api_client.post("/orders", json_data=invalid_order_data)
+        allure_reporter.add_api_response(response)
+        
+        # Assert
+        ApiAssertions.assert_status_code(response, 400)
+        ApiAssertions.assert_json_content_type(response)
+        
+        json_data = ApiAssertions.assert_json_body(response)
+        ApiAssertions.assert_json_has_key(json_data, 'errors')
+        
+        errors = json_data['errors']
+        assert any(error['field'] == 'customer_id' for error in errors), "Should have customer_id validation error"
+        assert any(error['field'] == 'items' for error in errors), "Should have items validation error"

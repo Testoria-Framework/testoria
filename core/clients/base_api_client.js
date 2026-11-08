@@ -76,8 +76,9 @@ class BaseApiClient {
    * @private
    */
   _logRequest(method, url, data) {
+    if (!process.env.API_DEBUG) return;
     console.log(`Making ${method.toUpperCase()} request to ${url}`);
-    if (data) {
+    if (data && Object.keys(data).length) {
       console.debug('With data:', data);
     }
   }
@@ -102,7 +103,7 @@ class BaseApiClient {
         headers: mergedHeaders
       });
     } catch (error) {
-      console.error(`GET request to ${url} failed:`, error.message);
+      if (process.env.API_DEBUG) console.error(`GET request to ${url} failed:`, error.message);
       throw error;
     }
   }
@@ -126,7 +127,7 @@ class BaseApiClient {
         headers: mergedHeaders
       });
     } catch (error) {
-      console.error(`POST request to ${url} failed:`, error.message);
+      if (process.env.API_DEBUG) console.error(`POST request to ${url} failed:`, error.message);
       throw error;
     }
   }
@@ -150,7 +151,7 @@ class BaseApiClient {
         headers: mergedHeaders
       });
     } catch (error) {
-      console.error(`PUT request to ${url} failed:`, error.message);
+      if (process.env.API_DEBUG) console.error(`PUT request to ${url} failed:`, error.message);
       throw error;
     }
   }
@@ -175,7 +176,7 @@ class BaseApiClient {
         headers: mergedHeaders
       });
     } catch (error) {
-      console.error(`DELETE request to ${url} failed:`, error.message);
+      if (process.env.API_DEBUG) console.error(`DELETE request to ${url} failed:`, error.message);
       throw error;
     }
   }
@@ -199,7 +200,7 @@ class BaseApiClient {
         headers: mergedHeaders
       });
     } catch (error) {
-      console.error(`PATCH request to ${url} failed:`, error.message);
+      if (process.env.API_DEBUG) console.error(`PATCH request to ${url} failed:`, error.message);
       throw error;
     }
   }

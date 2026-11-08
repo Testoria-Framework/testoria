@@ -15,7 +15,7 @@ class ConfigLoader {
    * 
    * @param {string} configPath - Path to the JSON configuration file
    */
-  constructor(configPath = 'core/config/config.json') {
+  constructor(configPath = path.join(__dirname, 'config.json')) {
     this.configPath = configPath;
     this._config = null;
     this._envPattern = /\${(.*?)}/g;
@@ -67,7 +67,13 @@ class ConfigLoader {
       throw error;
     }
 
-    return config.environments[env];
+    const envConfig = { ...config.environments[env] };
+    // API_BASE_URL (or TESTORIA_BASE_URL) overrides the configured URL, e.g. to target a local server.
+    const override = process.env.API_BASE_URL || process.env.TESTORIA_BASE_URL;
+    if (override) {
+      envConfig.base_url = override;
+    }
+    return envConfig;
   }
 
   /**
@@ -183,7 +189,7 @@ class ConfigLoader {
       const envVarValue = process.env[envVarName];
       
       if (envVarValue === undefined) {
-        console.warn(`Environment variable '${envVarName}' not found`);
+        if (process.env.API_DEBUG) console.warn(`Environment variable '${envVarName}' not found`);
         return match; // Return the original reference if not found
       }
       

@@ -1,0 +1,7 @@
+# Self-contained example: `testoria run --mock` from this folder.
+tests: [specs]
+reports_dir: reports
+mock:
+  port: 8089
+  mappings: [mappings]
+  db: db.json

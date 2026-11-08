@@ -1,250 +1,160 @@
-# API Testing Framework
+# Testoria
 
-A comprehensive multi-language API Testing Framework to facilitate automated testing for RESTful APIs. The framework supports functional, integration, security, and performance tests across Python, JavaScript, and Java.
+API testing for any project, on any platform. Testoria lets you write API tests as YAML or JSON and run them against any HTTP API, whatever language the API is written in. It also includes:
 
-## Features
+- a mock server that reads WireMock and MockServer files
+- a sample REST API to practise against
+- quick load testing and basic security checks
+- generators that turn OpenAPI/Swagger files and Postman collections into tests
 
-- **Multi-language support**: Write tests in Python, JavaScript, or Java
-- **Multiple test types**:
-  - Functional testing
-  - Integration/E2E testing
-  - Performance/Load testing
-  - Security testing
-- **Robust reporting**: Unified reporting with Allure
-- **CI/CD integration**: Ready-to-use configurations for GitHub Actions, GitLab CI/CD, and Jenkins
-- **Parallel execution**: Run tests in parallel for faster feedback
-- **Environment configurations**: Easily switch between environments (dev, test, staging, prod)
-- **Cross-platform**: Works on Windows, macOS, and Linux
+The original Python, JavaScript and Java example suites are still here, and they all run against the sample API out of the box.
 
-## Project Structure
-
-```
-api_testing_framework/
-├── core/
-│   ├── clients/            # Base API clients for different languages
-│   ├── assertions/         # Assertion utilities
-│   ├── config/             # Configuration management
-│   ├── utils/              # Common helper functions
-│   └── reporting/          # Reporting utilities
-│
-├── tests/
-│   ├── functional_tests/   # Functional tests
-│   ├── integration_tests/  # Integration tests
-│   ├── performance_tests/  # Performance tests
-│   └── security_tests/     # Security tests
-│
-├── mocks/                  # Mock server configurations
-├── ci_cd/                  # CI/CD configuration files
-├── reports/                # Test reports
-├── scripts/                # Utility scripts
-│
-├── requirements.txt        # Python dependencies
-├── package.json            # JavaScript dependencies
-└── pom.xml                 # Java dependencies
-```
-
-## Getting Started
-
-### Prerequisites
-
-Depending on which language you want to use, you'll need:
-
-- **Python**: Python 3.8+ and pip
-- **JavaScript**: Node.js 14+ and npm
-- **Java**: JDK 11+ and Maven
-
-### Installation
-
-1. Clone the repository:
+## Install (one command)
 
 ```bash
-git clone https://github.com/Testoria-Framework/testoria.git
-cd testoria
+curl -fsSL https://raw.githubusercontent.com/Testoria-Framework/testoria/main/install.sh | bash
 ```
 
-2. Install dependencies for your preferred language:
-
-**Python**:
-```bash
-pip install -r requirements.txt
-```
-
-**JavaScript**:
-```bash
-npm install
-```
-
-**Java**:
-```bash
-mvn install
-```
-
-### Running Tests
-
-Use the provided script to run tests:
+Pass options after `bash -s --`:
 
 ```bash
-# Run all functional tests in all languages
-./scripts/run_tests.sh --type functional
-
-# Run Python integration tests
-./scripts/run_tests.sh --language python --type integration
-
-# Run JavaScript security tests with report generation
-./scripts/run_tests.sh --language javascript --type security --report
-
-# Run performance tests
-./scripts/run_tests.sh --type performance
-
-# Run all tests in parallel
-./scripts/run_tests.sh --language all --type all --parallel
+curl -fsSL https://raw.githubusercontent.com/Testoria-Framework/testoria/main/install.sh | bash -s -- --all --verify
 ```
 
-#### Command Line Options
+From a checkout, run `./install.sh [options]`.
 
-- `-l, --language`: Specify language (python, javascript, java, all)
-- `-t, --type`: Specify test type (functional, integration, security, performance, all)
-- `-e, --env`: Specify environment (dev, test, staging, prod)
-- `-r, --report`: Generate and open Allure report
-- `-p, --parallel`: Run tests in parallel
-- `-v, --verbose`: Enable verbose output
-- `-h, --help`: Show help message
+| Option | What it does |
+| --- | --- |
+| *(none)* | Installs the `testoria` CLI into an isolated virtualenv and puts a launcher on your PATH |
+| `--js` | Installs the Node.js packages for the JavaScript suites |
+| `--java` | Downloads the Maven dependencies for the Java suites with `./mvnw` |
+| `--perf` | Installs locust, and k6 too when combined with `--system-deps` |
+| `--docker` | Builds the `testoria:latest` image |
+| `--all` | All of the above |
+| `--system-deps` | Installs missing Python, Node, JDK or git with brew, apt, dnf, yum, pacman, apk, zypper, winget or choco |
+| `--init DIR` | Creates a starter project in `DIR` |
+| `--verify` | Runs every installed suite against the sample API |
+| `--dir DIR` / `--bin-dir DIR` | Where to put the checkout and the launcher (defaults: `~/.testoria`, `~/.local/bin`) |
+| `--branch NAME` / `--python PATH` | Git branch to install, Python interpreter to use |
+| `--no-path`, `-y`, `-q` | Don't edit shell profiles, don't ask before package installs, less output |
+| `--uninstall` | Removes the virtualenv and the launcher |
 
-## Writing Tests
+The installer works on macOS, Linux, WSL and Windows (Git Bash or MSYS2). On Windows it also creates a `testoria.cmd` launcher. The CLI only needs Python 3.8+ and PyYAML.
 
-### Python Example
+You can also install it with `pip install .` or run it with Docker: `docker run --rm -v "$PWD:/work" testoria run`.
 
-```python
-import pytest
-from core.clients.base_api_client import BaseApiClient
-from core.assertions.python_assertions import ApiAssertions
-
-def test_get_user_by_id():
-    # Initialize client
-    client = BaseApiClient("https://api.example.com")
-    
-    # Make request
-    response = client.get("/users/1")
-    
-    # Assert response
-    ApiAssertions.assert_status_code(response, 200)
-    ApiAssertions.assert_json_content_type(response)
-    
-    json_data = ApiAssertions.assert_json_body(response)
-    ApiAssertions.assert_json_has_keys(json_data, ['id', 'name', 'email'])
-```
-
-### JavaScript Example
-
-```javascript
-const { describe, it } = require('mocha');
-const BaseApiClient = require('../../../core/clients/base_api_client');
-const ApiAssertions = require('../../../core/assertions/js_assertions');
-
-describe('User API', function() {
-  it('should get user by ID', async function() {
-    // Initialize client
-    const client = new BaseApiClient('https://api.example.com');
-    
-    // Make request
-    const response = await client.get('/users/1');
-    
-    // Assert response
-    ApiAssertions.assertStatusCode(response, 200);
-    ApiAssertions.assertJsonContentType(response);
-    ApiAssertions.assertJsonHasKeys(response.data, ['id', 'name', 'email']);
-  });
-});
-```
-
-### Java Example
-
-```java
-import core.clients.BaseApiClient;
-import core.assertions.JavaAssertions;
-import io.restassured.response.Response;
-import org.json.JSONObject;
-import org.junit.jupiter.api.*;
-
-public class UserApiTest {
-    @Test
-    public void testGetUserById() {
-        // Initialize client
-        BaseApiClient client = new BaseApiClient("https://api.example.com");
-        
-        // Make request
-        Response response = client.get("/users/1");
-        
-        // Assert response
-        JavaAssertions.assertStatusCode(response, 200);
-        JavaAssertions.assertJsonContentType(response);
-        
-        JSONObject json = JavaAssertions.getResponseAsJsonObject(response);
-        Assertions.assertTrue(json.has("id"));
-        Assertions.assertTrue(json.has("name"));
-        Assertions.assertTrue(json.has("email"));
-    }
-}
-```
-
-## Configuration
-
-Configuration is managed through the `core/config/config.json` file and environment variables. You can specify different settings for each environment (dev, test, staging, prod).
-
-Example configuration:
-
-```json
-{
-  "environments": {
-    "dev": {
-      "base_url": "https://api-dev.example.com",
-      "timeout": 30000
-    },
-    "test": {
-      "base_url": "https://api-test.example.com",
-      "timeout": 30000
-    }
-  }
-}
-```
-
-Environment variables can be used in the configuration by using the syntax `${VARIABLE_NAME}`.
-
-## Reporting
-
-The framework uses Allure for unified reporting across all languages. Reports can be generated using the `--report` flag when running tests:
+## Quick start
 
 ```bash
-./scripts/run_tests.sh --type functional --report
+testoria init my-api-tests && cd my-api-tests
+testoria run --mock            # runs the example spec against the built-in mock server
+testoria run -e staging        # same tests against a real environment from testoria.yaml
 ```
 
-This will generate and open an HTML report with detailed test results, including:
+## Writing tests
 
-- Test status (passed/failed)
-- Test duration
-- Request/response details
-- Error messages
-- Screenshots (if available)
-- Trending and history
+```yaml
+name: Users API
+base_url: "{{ env.API_URL | default('http://localhost:8080') }}"
+headers:
+  Authorization: "Bearer {{ token }}"
 
-## CI/CD Integration
+setup:
+  - request: {method: POST, url: /auth/login, json: {username: me, password: "{{ env.PASSWORD }}"}}
+    extract: {token: $.token}
 
-The framework includes pre-configured files for:
+tests:
+  - name: create user
+    tags: [smoke]
+    request:
+      method: POST
+      url: /users
+      json: {name: "{{ $randomName }}", email: "{{ $randomEmail }}"}
+    expect:
+      status: 201                 # also: "2xx", [200, 204], "200-299"
+      max_time_ms: 1000
+      headers: {Content-Type: json}
+      json:
+        $.id: {exists: true, type: integer}
+        $.email: {matches: "@example.com$"}
+      schema: {type: object, required: [id, name, email]}
+    extract: {user_id: $.id}
 
-- GitHub Actions: `.github/workflows/main.yml`
-- GitLab CI/CD: `.gitlab-ci.yml`
-- Jenkins: `Jenkinsfile`
+  - name: invalid input - {{ case }}
+    data:                         # data-driven; can also be a CSV, YAML or JSON file path
+      - {case: no email, body: {name: Ada}}
+      - {case: bad email, body: {name: Ada, email: nope}}
+    request: {method: POST, url: /users, json: "{{ body }}"}
+    expect: {status: 400}
 
-These configurations will run tests, generate reports, and upload artifacts.
+  - name: fetch it
+    retries: 3                    # retry flaky checks
+    request: {method: GET, url: "/users/{{ user_id }}"}
+    expect: {json: {$.id: "{{ user_id }}"}}
+```
 
-## Contributing
+- **Operators:** `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `between`, `approx`, `contains`, `not_contains`, `matches`, `type`, `exists`, `length`, `min_length`, `max_length`, `in`, `not_in`, `starts_with`, `ends_with`, `empty`, `not_empty`, `is_null`, `schema`.
+- **JSON paths:** `$.a.b`, `$.list[0]`, `$.list[-1]`, `$.list[*].id`, `$..id`, `$.list.length()`.
+- **Templates:** use `{{ var }}`, `{{ env.NAME }}` and `{{ response.body.x }}`, plus the filters `default`, `upper`, `lower`, `int`, `float`, `str`, `length`, `json`, `b64encode` and `b64decode`. Built-in values: `$uuid`, `$timestamp`, `$isoNow`, `$randomInt(1,10)`, `$randomString(8)`, `$randomEmail`, `$randomName`.
+- **Extract:** from a JSON path, `header: X-Request-Id`, `regex: "id=(\\d+)"` or `status`.
+- **Auth:** `auth: {type: bearer, token: ...}`, `{type: basic, username, password}` or `{type: apikey, header, key}`. Sensitive headers are masked in reports.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Project config (`testoria.yaml`)
+
+```yaml
+tests: [tests/api]
+reports: [html, junit, json]
+default_env: local
+environments:
+  local:   {base_url: "http://127.0.0.1:8080"}
+  staging: {base_url: https://staging.example.com, headers: {Authorization: "Bearer {{ env.STAGING_TOKEN }}"}}
+mock: {port: 8080, mappings: [mocks], db: mocks/db.json, auto_start: false}
+```
+
+Testoria also loads a `.env` file from the project folder.
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `testoria run [paths]` | Run specs. Options: `-e env`, `-u url`, `-t/-x tag`, `-k regex`, `--var k=v`, `-w N` (parallel), `--retries`, `--fail-fast`, `--dry-run`, `--mock`, `--open`, `--report html,junit,json` |
+| `testoria watch` | Re-run whenever a spec changes |
+| `testoria mock [dirs] [--db db.json]` | Mock server. Reads WireMock and MockServer files, supports WireMock-style response templating, delays and faults, and turns every top-level key in `--db` into a CRUD resource. Admin endpoints are under `/__admin` |
+| `testoria demo-api` | Sample API with users, products, orders, login, a rate limit, validation and auth |
+| `testoria load URL -u 20 -d 30 --p95 500` | Load test that reports p50/p90/p95/p99 latency, throughput (RPS) and error rate, and fails when a threshold is missed |
+| `testoria scan URL [--active] [--check-auth]` | Basic security checks: TLS, security headers, CORS, cookies, version leaks, TRACE, auth bypass and simple injection probes. **Only scan systems you own or are allowed to test.** |
+| `testoria import openapi spec.yaml -o tests/api/generated.yaml` | Generate smoke and contract tests from OpenAPI 3 or Swagger 2. `--include-mutations` adds POST/PUT/DELETE tests |
+| `testoria import postman collection.json -o tests/api/pm.yaml` | Convert a Postman v2 collection |
+| `testoria init`, `testoria doctor` | Create a starter project, check which tools are installed |
+
+Reports go to `reports/`. The `report.html` file needs no internet connection and lets you filter and search tests. `junit.xml` works with any CI server, and `results.json` is for your own scripts.
+
+## Bundled language suites
+
+```bash
+scripts/run_tests.sh --language python,javascript,java --type all     # against the sample API
+scripts/run_tests.sh --language python --type security --base-url https://api.mycompany.com
+scripts/run_tests.sh --type performance                               # testoria load, plus k6 if installed
+```
+
+- **Python** (`pytest`, `requests`, `assertpy`): `core/clients/base_api_client.py`, `core/assertions/python_assertions.py`
+- **JavaScript** (`mocha`, `axios`, `chai`): `core/clients/base_api_client.js`, `core/assertions/js_assertions.js`
+- **Java** (`JUnit 5`, `REST Assured`): `src/main/java/core/...`, run with `./mvnw test`
+
+All three read `API_BASE_URL`. When it isn't set, they start the sample API on a free port. Allure results are written to `reports/allure-results/<language>`, and `--report` builds the Allure HTML report when the `allure` CLI is installed. Older load-test scripts for k6, Locust and JMeter are in `tests/performance_tests`.
+
+## CI/CD
+
+Ready-made pipelines: `.github/workflows/main.yml` (Linux, macOS and Windows, with Python, JavaScript, Java and Docker jobs), `.gitlab-ci.yml` and `Jenkinsfile`. Copies are also in `ci_cd/`. Each pipeline installs with `./install.sh` and publishes JUnit results.
+
+## Development
+
+```bash
+./install.sh --all
+.venv/bin/python -m pytest tests/unit          # framework unit tests
+scripts/run_tests.sh --language all --type all # everything
+```
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT

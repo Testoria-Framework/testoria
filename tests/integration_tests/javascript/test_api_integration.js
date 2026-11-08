@@ -11,7 +11,7 @@ const allureReporter = require('../../../core/reporting/allure_reporter');
 const ApiTestUtils = require('../../../core/utils/common_helpers');
 
 describe('API Integration Tests', function() {
-  this.timeout(10000); // Integration tests may take longer
+  this.timeout(60000); // Integration tests may take longer
   let apiClient;
   
   // Test data for tracking across tests

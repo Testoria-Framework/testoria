@@ -82,23 +82,12 @@ class TestApiSecurity:
         for endpoint in protected_endpoints:
             allure_reporter.add_api_request("GET", endpoint, api_client.headers)
             
-            try:
-                response = api_client.get(endpoint)
-                # If request succeeds, fail the test
-                allure_reporter.add_api_response(response)
-                assert False, f"Endpoint {endpoint} should require authentication"
-            except Exception as e:
-                # Extract response from exception
-                if hasattr(e, 'response'):
-                    response = e.response
-                    allure_reporter.add_api_response(response)
-                    
-                    # Should return 401 Unauthorized or 403 Forbidden
-                    status_code = response.status_code
-                    assert status_code in [401, 403], f"Expected 401 or 403, but got {status_code}"
-                else:
-                    # Re-raise if not the expected exception
-                    raise
+            response = api_client.get(endpoint)
+            allure_reporter.add_api_response(response)
+
+            # Should return 401 Unauthorized or 403 Forbidden
+            assert response.status_code in [401, 403], \
+                f"Endpoint {endpoint} should require authentication, got {response.status_code}"
     
     @pytest.mark.security
     def test_authentication_with_valid_token(self, api_client, auth_token):
@@ -131,22 +120,11 @@ class TestApiSecurity:
         # Act
         allure_reporter.add_api_request("GET", "/users", api_client.headers)
         
-        try:
-            response = api_client.get("/users")
-            # If request succeeds, fail the test
-            allure_reporter.add_api_response(response)
-            assert False, "Request with invalid token should fail"
-        except Exception as e:
-            # Extract response from exception
-            if hasattr(e, 'response'):
-                response = e.response
-                allure_reporter.add_api_response(response)
-                
-                # Should return 401 Unauthorized
-                ApiAssertions.assert_status_code(response, 401)
-            else:
-                # Re-raise if not the expected exception
-                raise
+        response = api_client.get("/users")
+        allure_reporter.add_api_response(response)
+
+        # Should return 401 Unauthorized
+        ApiAssertions.assert_status_code(response, 401)
     
     @pytest.mark.security
     def test_sql_injection_prevention(self, api_client):

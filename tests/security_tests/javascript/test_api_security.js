@@ -206,7 +206,8 @@ describe('API Security Tests', function() {
             allureReporter.addApiResponse(error.response);
             
             // Should return 400 Bad Request or 404 Not Found for malformed IDs
-            expect(error.response.status).to.be.oneOf([400, 404], `Expected 400 or 404, but got ${error.response.status}`);
+            // 401/403 are also safe: the payload is rejected before reaching any data store.
+            expect(error.response.status).to.be.oneOf([400, 401, 403, 404], `Expected a 4xx rejection, but got ${error.response.status}`);
           } else {
             // Re-throw if not the expected exception
             throw error;

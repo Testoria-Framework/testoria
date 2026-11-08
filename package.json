@@ -1,20 +1,18 @@
 {
-  "name": "api-testing-framework",
-  "version": "1.0.0",
-  "description": "Multi-language API Testing Framework for automated testing of RESTful APIs",
-  "main": "index.js",
+  "name": "testoria",
+  "version": "2.0.0",
+  "description": "Testoria JavaScript API test suites",
+  "main": "core/clients/base_api_client.js",
   "scripts": {
-    "test": "mocha 'tests/**/*.js'",
-    "test:functional": "mocha 'tests/functional_tests/javascript/**/*.js' --reporter mochawesome --reporter-options reportDir=reports/functional,reportFilename=functional-report",
-    "test:integration": "mocha 'tests/integration_tests/javascript/**/*.js' --reporter mochawesome --reporter-options reportDir=reports/integration,reportFilename=integration-report",
-    "test:security": "mocha 'tests/security_tests/javascript/**/*.js' --reporter mochawesome --reporter-options reportDir=reports/security,reportFilename=security-report",
-    "test:performance": "node tests/performance_tests/javascript/load_test.js",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "test": "mocha 'tests/{functional,integration,security}_tests/javascript/test_*.js'",
+    "test:functional": "mocha 'tests/functional_tests/javascript/test_*.js'",
+    "test:integration": "mocha 'tests/integration_tests/javascript/test_*.js'",
+    "test:security": "mocha 'tests/security_tests/javascript/test_*.js'",
+    "test:all": "bash scripts/run_tests.sh --language all --type all"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/api-testing-framework.git"
+    "url": "git+https://github.com/Testoria-Framework/testoria.git"
   },
   "keywords": [
     "api",
@@ -24,12 +22,12 @@
     "framework",
     "qa"
   ],
-  "author": "Your Name",
+  "author": "Mohamed Amine Ben Salah",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yourusername/api-testing-framework/issues"
+    "url": "https://github.com/Testoria-Framework/testoria/issues"
   },
-  "homepage": "https://github.com/yourusername/api-testing-framework#readme",
+  "homepage": "https://github.com/Testoria-Framework/testoria#readme",
   "dependencies": {
     "axios": "^1.3.4",
     "axios-retry": "^3.4.0",
@@ -42,20 +40,9 @@
     "mochawesome": "^7.1.3"
   },
   "devDependencies": {
-    "ajv": "^8.12.0",
-    "allure-commandline": "^2.21.0",
-    "allure-js-commons": "^2.1.0",
-    "allure-mocha": "^2.1.0",
-    "eslint": "^8.35.0",
-    "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-mocha": "^10.1.0",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^6.1.1",
-    "k6": "^0.0.0",
-    "zaproxy": "2.0.0-rc.6"
+    "ajv": "^8.12.0"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18"
   }
 }

@@ -1,0 +1,38 @@
+name: Todo API on the mock server
+tests:
+  - name: stubbed status endpoint
+    request: {method: GET, url: /status}
+    expect: {status: 200, json: {$.status: up}}
+
+  - name: response templating
+    request: {method: GET, url: /echo/hello, params: {q: world}}
+    expect: {status: 200, json: {$.segment: hello, $.q: world}}
+
+  - name: latency stub is slower than 250ms
+    request: {method: GET, url: /slow}
+    expect: {status: 200, body: ok}
+
+  - name: CRUD - create
+    request: {method: POST, url: /todos, json: {title: "{{ $randomString(6) }}", done: false}}
+    expect: {status: 201, json: {$.id: 3}}
+    extract: {todo_id: $.id}
+
+  - name: CRUD - filter
+    request: {method: GET, url: /todos, params: {done: "true"}}
+    expect:
+      status: 200
+      json:
+        $: {length: 1}
+        $[0].title: Run them in CI
+
+  - name: CRUD - patch
+    request: {method: PATCH, url: "/todos/{{ todo_id }}", json: {done: true}}
+    expect: {status: 200, json: {$.done: true}}
+
+  - name: CRUD - delete then 404
+    request: {method: DELETE, url: "/todos/{{ todo_id }}"}
+    expect: {status: 204}
+
+  - name: CRUD - gone
+    request: {method: GET, url: "/todos/{{ todo_id }}"}
+    expect: {status: 404}
